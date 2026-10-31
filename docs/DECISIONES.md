@@ -20,3 +20,6 @@ Cada decisión lleva su motivo, para no rediscutirla y para poder explicarla en 
 | 14 | Plantillas y estáticos a nivel de proyecto | Los comparten `accounts` y `clients` |
 | 15 | Bloqueo de login con la caché de Django y un solo proceso de Gunicorn | Sin dependencias extra; un proceso con hilos basta para SQLite y comparte la caché |
 | 16 | Token CSRF en una etiqueta meta y cookie `HttpOnly` | JavaScript no necesita leer la cookie |
+| 17 | Campo `search_text` normalizado | SQLite no ignora acentos ni mayúsculas fuera de ASCII; sin esto "jose" no encontraría a "José" |
+| 18 | Tarjetas por debajo de 900 px en lugar de ocultar columnas | El enunciado exige mostrar los cinco datos y evita el desplazamiento horizontal |
+| 19 | WhiteNoise con archivos comprimidos, sin nombres con hash | Los módulos ES usan rutas relativas y no hay un paso de compilación que las reescriba |

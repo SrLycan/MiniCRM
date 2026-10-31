@@ -37,6 +37,7 @@ templates + CSS + JS Vanilla  ──► clients/views.py (páginas y API JSON)
 
 ```
 config/                      settings, urls, wsgi
+docker/                      script de arranque del contenedor
 accounts/                    login con bloqueo por intentos fallidos
 clients/
   models.py  forms.py  views.py  urls.py  admin.py  serializers.py
@@ -85,7 +86,7 @@ Los errores tienen siempre esta forma, con un código estable:
 ```
 
 La API usa CSRF de Django con la cabecera `X-CSRFToken`. `q` busca por nombre o empresa
-sin distinguir mayúsculas. `sort` acepta una lista cerrada de columnas. La paginación es
+sin distinguir mayúsculas ni acentos. `sort` acepta una lista cerrada de columnas. La paginación es
 de 10 clientes por página.
 
 ## Autenticación
@@ -119,8 +120,9 @@ donde se leen datos. La regla es simple: el cristal enmarca y el sólido se lee.
 - **Modal de crear o editar** y **diálogo de eliminación** con `<dialog>` nativo.
 - **Navegación:** barra lateral en desktop, compacta en tablet e inferior en móvil.
 
-**Responsive:** desktop desde 1024 px, tablet de 640 a 1023 px y móvil por debajo de
-640 px, probado hasta 360 px. En móvil cada fila de la tabla se muestra como tarjeta.
+**Responsive:** barra lateral desde 1024 px, riel de iconos de 640 a 1023 px y navegación
+inferior por debajo de 640 px, probado hasta 360 px. Por debajo de 900 px cada fila de la
+tabla se muestra como tarjeta, con todos sus datos y un selector de orden.
 
 **Estados de interfaz:** carga con esqueletos, lista vacía, búsqueda sin resultados, error
 de red con reintento, envío con botón bloqueado y foco visible.
@@ -163,5 +165,5 @@ modales y devuelto al cerrar, toasts con `aria-live`. Los datos se pintan con
 | El cristal resta legibilidad en la tabla | Superficie más densa y contraste verificado |
 | `backdrop-filter` y animaciones pesan en móvil | Respaldo opaco y animación reducida |
 | Fuerza bruta contra el login | Bloqueo temporal por usuario e IP |
-| Python 3.15 local no soportado por Django 5.2 | Instrucciones con Python 3.13 y Docker como vía principal |
+| Python local distinto al de la imagen | Docker como vía principal y Python 3.13 fijado en CI |
 | Plazo de un día | Plan por fases, con el flujo central terminado primero |
