@@ -2,12 +2,19 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  boardColumnNote,
   clientCountLabel,
   debounce,
   hueFromText,
   initials,
   percentage,
 } from "../../static/js/core/utils.js";
+
+test("boardColumnNote avisa solo si la columna no muestra a todos", () => {
+  assert.equal(boardColumnNote(50, 72), "Se muestran 50 de 72. Usa la búsqueda.");
+  assert.equal(boardColumnNote(12, 12), "");
+  assert.equal(boardColumnNote(0, 0), "");
+});
 
 test("initials usa la primera y la última palabra", () => {
   assert.equal(initials("Ana María Ruiz"), "AR");

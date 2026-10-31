@@ -35,3 +35,8 @@ export function formatDate(isoDate) {
 export function clientCountLabel(total) {
   return total === 1 ? "1 cliente" : `${total} clientes`;
 }
+
+/** Aviso de una columna del tablero; vacío si se ven todos sus clientes. */
+export function boardColumnNote(shown, total) {
+  return shown < total ? `Se muestran ${shown} de ${total}. Usa la búsqueda.` : "";
+}

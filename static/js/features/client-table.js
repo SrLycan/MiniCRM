@@ -12,7 +12,7 @@ function createCell(label, ...content) {
   );
 }
 
-function createActionButton({ icon, label, action, isDanger = false }) {
+export function createActionButton({ icon, label, action, isDanger = false }) {
   const className = isDanger ? "icon-button icon-button--danger" : "icon-button";
   return createElement(
     "button",
