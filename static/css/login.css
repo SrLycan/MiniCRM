@@ -1,0 +1,126 @@
+.login {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-7);
+  max-width: 1080px;
+  min-height: 100dvh;
+  margin-inline: auto;
+  padding: var(--space-5) clamp(16px, 4vw, 32px);
+}
+
+.login__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.login__title {
+  font-size: clamp(2.1rem, 4.6vw, 3.4rem);
+}
+
+.login__title em {
+  background: linear-gradient(120deg, #5cc6f7, var(--accent), #93d6f8);
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+}
+
+[data-theme="light"] .login__title em {
+  background: none;
+  color: var(--accent-text);
+}
+
+.login__lead {
+  max-width: 44ch;
+  color: var(--text-soft);
+  font-size: 1.1rem;
+}
+
+.login__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+}
+
+.login__card-title {
+  font-size: 1.5rem;
+}
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.login__form .button {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.password-toggle {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
+
+.password-input {
+  padding-right: 48px;
+}
+
+.demo-hint {
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text-soft);
+  font-size: .9rem;
+}
+
+.demo-hint code {
+  color: var(--accent-text);
+  font-family: ui-monospace, Consolas, monospace;
+  font-weight: 600;
+}
+
+@media (max-width: 859px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    align-content: center;
+    max-width: 460px;
+  }
+
+  .login__lead {
+    display: none;
+  }
+
+  .login__card {
+    padding: var(--space-5);
+  }
+}
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 100dvh;
+  padding: var(--space-5);
+  color: var(--text-soft);
+  text-align: center;
+}
+
+.error-page .eyebrow {
+  margin-bottom: 0;
+}
+
+.error-page .page-header__title {
+  color: var(--text);
+}
+
+.error-page .button {
+  margin-top: var(--space-3);
+}
