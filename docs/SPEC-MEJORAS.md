@@ -111,9 +111,9 @@ enunciado.
 
 ### Criterios de aceptación
 
-- [ ] Sigue pidiendo confirmación antes de eliminar.
-- [ ] Deshacer devuelve al cliente con sus mismos datos, en ambas vistas.
-- [ ] Sin Deshacer, el cliente se elimina de verdad al terminar el tiempo.
-- [ ] Salir de la página durante el tiempo de espera elimina al cliente.
-- [ ] Un error del servidor devuelve al cliente y se informa.
-- [ ] Varias eliminaciones seguidas se deshacen por separado.
+- [x] Sigue pidiendo confirmación antes de eliminar.
+- [x] Deshacer devuelve al cliente con sus mismos datos, en ambas vistas.
+- [x] Sin Deshacer, el cliente se elimina de verdad al terminar el tiempo.
+- [x] Salir de la página durante el tiempo de espera elimina al cliente.
+- [x] Un error del servidor devuelve al cliente y se informa.
+- [x] Varias eliminaciones seguidas se deshacen por separado.

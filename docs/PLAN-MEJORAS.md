@@ -29,7 +29,7 @@ Mismo flujo que `PLAN.md`: una rama `feature/*` por fase, fusionada a `develop` 
 
 ## Fase 4: Deshacer al eliminar (`feature/deshacer-eliminar`)
 
-- [ ] Acciones aplazadas con pruebas de JS
-- [ ] Toast con acción
-- [ ] Eliminación aplazada, Deshacer y envío al salir
-- [ ] Verificación en navegador
+- [x] Acciones aplazadas con pruebas de JS
+- [x] Toast con acción
+- [x] Eliminación aplazada, Deshacer y envío al salir
+- [x] Verificación en navegador
