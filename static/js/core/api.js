@@ -16,12 +16,13 @@ function redirectToLogin() {
   location.assign(`/login/?next=${next}`);
 }
 
-async function request(url, { method = "GET", body, signal } = {}) {
+async function request(url, { method = "GET", body, signal, keepalive = false } = {}) {
   let response;
   try {
     response = await fetch(url, {
       method,
       signal,
+      keepalive,
       credentials: "same-origin",
       headers: {
         Accept: "application/json",
@@ -69,8 +70,8 @@ export const clientsApi = {
   updateStatus(id, status) {
     return request(`${CLIENTS_URL}${id}/`, { method: "PATCH", body: { status } });
   },
-  remove(id) {
-    return request(`${CLIENTS_URL}${id}/`, { method: "DELETE" });
+  remove(id, { keepalive = false } = {}) {
+    return request(`${CLIENTS_URL}${id}/`, { method: "DELETE", keepalive });
   },
   simulateWhatsApp() {
     return request(`${CLIENTS_URL}simulate-whatsapp/`, { method: "POST" });

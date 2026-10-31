@@ -1,14 +1,22 @@
 import { clientsApi } from "../core/api.js";
-import { setButtonLoading } from "../core/dom.js";
+import { createDeferredActions } from "../core/utils.js";
 import { closeDialog, setUpDialog } from "../ui/dialog.js";
 import { showToast } from "../ui/toast.js";
 import { notifyClientsChanged } from "./client-events.js";
+
+const UNDO_WINDOW_MS = 6000;
 
 const dialog = document.querySelector("#delete-dialog");
 const nameLabel = document.querySelector("#delete-dialog-name");
 const confirmButton = document.querySelector("#delete-confirm");
 
+const pendingDeletions = createDeferredActions(UNDO_WINDOW_MS);
+
 let clientToDelete = null;
+
+export function isPendingDeletion(clientId) {
+  return pendingDeletions.has(clientId);
+}
 
 export function openDeleteDialog(client) {
   clientToDelete = client;
@@ -16,25 +24,42 @@ export function openDeleteDialog(client) {
   dialog.showModal();
 }
 
-async function confirmDelete() {
-  setButtonLoading(confirmButton, true);
+async function deleteClient(client, { keepalive = false } = {}) {
   try {
-    await clientsApi.remove(clientToDelete.id);
-    showToast("Cliente eliminado.");
-    closeDialog(dialog);
-    notifyClientsChanged();
+    await clientsApi.remove(client.id, { keepalive });
   } catch (error) {
-    showToast(error.message, "error");
-    if (error.code === "CLIENT_NOT_FOUND") {
-      closeDialog(dialog);
-      notifyClientsChanged();
+    if (keepalive) return;
+    if (error.code !== "CLIENT_NOT_FOUND") {
+      showToast(`No pudimos eliminar a ${client.name}. ${error.message}`, "error");
     }
-  } finally {
-    setButtonLoading(confirmButton, false);
   }
+  if (!keepalive) notifyClientsChanged();
+}
+
+function undoDelete(client) {
+  if (!pendingDeletions.cancel(client.id)) return;
+  showToast(`${client.name} sigue en tu cartera.`);
+  notifyClientsChanged();
+}
+
+function confirmDelete() {
+  const client = clientToDelete;
+  pendingDeletions.schedule(client.id, (options) => deleteClient(client, options));
+
+  const undoButton = showToast(`Se eliminó a ${client.name}.`, "success", {
+    actionLabel: "Deshacer",
+    onAction: () => undoDelete(client),
+    durationMs: UNDO_WINDOW_MS,
+  });
+  // El botón que abrió el diálogo desaparece con la fila, así que el foco no puede volver ahí.
+  dialog.addEventListener("close", () => undoButton.focus(), { once: true });
+
+  closeDialog(dialog);
+  notifyClientsChanged();
 }
 
 export function initDeleteDialog() {
   setUpDialog(dialog);
   confirmButton.addEventListener("click", confirmDelete);
+  window.addEventListener("pagehide", () => pendingDeletions.flush({ keepalive: true }));
 }
