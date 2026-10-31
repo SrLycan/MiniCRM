@@ -1,1 +1,80 @@
-x
+{% extends "app.html" %}
+{% load static %}
+
+{% block title %}Panel · Órbita CRM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div>
+    <p class="eyebrow">{% now "l j \d\e F" %}</p>
+    <h1 class="page-header__title">Hola, {{ user.first_name|default:user.username }}</h1>
+  </div>
+  <button class="button button--primary" type="button" data-new-client>
+    <span class="button__label">Nuevo cliente</span>
+  </button>
+</header>
+
+<section class="kpis" aria-label="Resumen de clientes">
+  <article class="kpi glass glass--strong glass--interactive rise-in">
+    <h2 class="kpi__label">Total de clientes</h2>
+    <p class="kpi__value" data-kpi="total">0</p>
+    <p class="kpi__hint" data-kpi-hint="total">&nbsp;</p>
+  </article>
+  <article class="kpi kpi--prospect glass glass--interactive rise-in" style="--order: 1">
+    <h2 class="kpi__label">Prospectos</h2>
+    <p class="kpi__value" data-kpi="prospect">0</p>
+    <p class="kpi__hint" data-kpi-hint="prospect">&nbsp;</p>
+  </article>
+  <article class="kpi kpi--client glass glass--interactive rise-in" style="--order: 2">
+    <h2 class="kpi__label">Clientes activos</h2>
+    <p class="kpi__value" data-kpi="client">0</p>
+    <p class="kpi__hint" data-kpi-hint="client">&nbsp;</p>
+  </article>
+  <article class="kpi kpi--inactive glass glass--interactive rise-in" style="--order: 3">
+    <h2 class="kpi__label">Inactivos</h2>
+    <p class="kpi__value" data-kpi="inactive">0</p>
+    <p class="kpi__hint" data-kpi-hint="inactive">&nbsp;</p>
+  </article>
+</section>
+
+<div class="dashboard-grid">
+  <section class="panel glass rise-in" style="--order: 4" aria-labelledby="distribution-title">
+    <h2 class="panel__title" id="distribution-title">Tu órbita</h2>
+    <p class="panel__subtitle">Distribución por estado</p>
+    <div class="orbit-chart">
+      <svg class="orbit-chart__ring" viewBox="0 0 42 42" role="img" aria-labelledby="ring-summary">
+        <title id="ring-summary">Distribución de clientes por estado</title>
+        <circle class="orbit-chart__track" cx="21" cy="21" r="15.915"/>
+        <g id="ring-segments"></g>
+      </svg>
+      <div class="orbit-chart__center">
+        <strong id="conversion-rate">0%</strong>
+        <span>conversión</span>
+      </div>
+    </div>
+    <ul class="legend" id="ring-legend"></ul>
+  </section>
+
+  <section class="panel glass rise-in" style="--order: 5" aria-labelledby="signups-title">
+    <h2 class="panel__title" id="signups-title">Altas recientes</h2>
+    <p class="panel__subtitle">Clientes nuevos por semana</p>
+    <ol class="bars" id="signup-bars"></ol>
+  </section>
+
+  <section class="panel panel--wide solid rise-in" style="--order: 6" aria-labelledby="recent-title">
+    <div class="panel__header">
+      <div>
+        <h2 class="panel__title" id="recent-title">Últimos clientes</h2>
+        <p class="panel__subtitle">Registrados más recientemente</p>
+      </div>
+      <a class="button button--ghost" href="{% url 'clients:client_list' %}">Ver todos</a>
+    </div>
+    <ul class="recent" id="recent-clients"></ul>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="module" src="{% static 'js/pages/dashboard-page.js' %}"></script>
+{% endblock %}
