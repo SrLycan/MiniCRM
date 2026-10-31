@@ -1,0 +1,49 @@
+{% extends "app.html" %}
+{% load static %}
+
+{% block title %}Tablero · Órbita CRM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div>
+    <p class="eyebrow">Cartera</p>
+    <h1 class="page-header__title">Tablero</h1>
+  </div>
+  <button class="button button--primary" type="button" data-new-client>
+    <span class="button__label">Nuevo cliente</span>
+  </button>
+</header>
+
+<section class="toolbar glass" aria-label="Buscar clientes">
+  <div class="search">
+    <label class="visually-hidden" for="client-search">Buscar por nombre o empresa</label>
+    <svg class="search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="input search__input" id="client-search" type="search" placeholder="Buscar por nombre o empresa" autocomplete="off" maxlength="100">
+  </div>
+</section>
+
+<section class="table-card solid" aria-labelledby="client-count">
+  <div class="board" id="client-board">
+    {% for value, label in statuses %}
+      <section class="board-column board-column--{{ value }}" data-status="{{ value }}" data-label="{{ label }}" aria-labelledby="board-title-{{ value }}">
+        <header class="board-column__header">
+          <h2 class="board-column__title" id="board-title-{{ value }}">{{ label }}</h2>
+          <span class="board-column__count" data-column-count></span>
+        </header>
+        <p class="board-column__note" data-column-note hidden></p>
+        <div class="board-column__cards" data-column-cards></div>
+      </section>
+    {% endfor %}
+  </div>
+  <div class="table-state" id="client-state" hidden></div>
+
+  <footer class="table-card__footer">
+    <p class="table-card__count" id="client-count" aria-live="polite"></p>
+  </footer>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="module" src="{% static 'js/pages/board-page.js' %}"></script>
+{% endblock %}

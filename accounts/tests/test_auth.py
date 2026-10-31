@@ -7,6 +7,7 @@ LOGIN_URL = reverse("accounts:login")
 LOGOUT_URL = reverse("accounts:logout")
 DASHBOARD_URL = reverse("clients:dashboard")
 CLIENTS_URL = reverse("clients:client_list")
+BOARD_URL = reverse("clients:board")
 API_URLS = [reverse("clients:api_collection"), reverse("clients:api_stats")]
 
 
@@ -21,7 +22,7 @@ class AuthTestCase(TestCase):
 
 class AccessControlTests(AuthTestCase):
     def test_pages_redirect_to_login_without_session(self):
-        for url in (DASHBOARD_URL, CLIENTS_URL):
+        for url in (DASHBOARD_URL, CLIENTS_URL, BOARD_URL):
             response = self.client.get(url)
             self.assertRedirects(response, f"{LOGIN_URL}?next={url}")
 
