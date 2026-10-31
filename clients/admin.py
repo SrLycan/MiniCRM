@@ -9,5 +9,5 @@ class ClientAdmin(admin.ModelAdmin):
     list_filter = ("status", "created_at")
     list_editable = ("status",)
     search_fields = ("name", "company", "email", "search_text")
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("whatsapp_id", "created_at", "updated_at")
     list_per_page = 25

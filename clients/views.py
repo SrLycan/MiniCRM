@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -13,7 +12,7 @@ from django.views.generic import TemplateView
 
 from .forms import ClientForm, ClientStatusForm
 from .models import Client, normalize_search_text
-from .serializers import serialize_client
+from .serializers import parse_json_object, serialize_client
 
 PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
@@ -39,15 +38,6 @@ def error_response(code: str, message: str, status: int, errors: dict | None = N
 
 def validation_error_response(errors: dict) -> JsonResponse:
     return error_response("VALIDATION_ERROR", "Revisa los campos marcados.", 400, errors)
-
-
-def parse_json_body(request: HttpRequest) -> dict | None:
-    """Devuelve el cuerpo como diccionario, o None si no es un objeto JSON válido."""
-    try:
-        data = json.loads(request.body)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return None
-    return data if isinstance(data, dict) else None
 
 
 def parse_page_size(value: str | None) -> int:
@@ -115,7 +105,7 @@ class ClientCollectionApiView(ApiView):
         )
 
     def post(self, request: HttpRequest) -> JsonResponse:
-        data = parse_json_body(request)
+        data = parse_json_object(request.body)
         if data is None:
             return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
         return save_client_form(ClientForm(data), success_status=201)
@@ -131,14 +121,14 @@ class ClientDetailApiView(ApiView):
         return JsonResponse(serialize_client(Client.objects.get(pk=pk)))
 
     def put(self, request: HttpRequest, pk: int) -> JsonResponse:
-        data = parse_json_body(request)
+        data = parse_json_object(request.body)
         if data is None:
             return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
         form = ClientForm(data, instance=Client.objects.get(pk=pk))
         return save_client_form(form, success_status=200)
 
     def patch(self, request: HttpRequest, pk: int) -> JsonResponse:
-        data = parse_json_body(request)
+        data = parse_json_object(request.body)
         if data is None:
             return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
         form = ClientStatusForm(data, instance=Client.objects.get(pk=pk))

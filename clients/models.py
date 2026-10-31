@@ -11,6 +11,10 @@ PHONE_PATTERN = re.compile(r"^\+?[\d\s-]+$")
 PHONE_MIN_DIGITS = 7
 PHONE_MAX_DIGITS = 15
 
+# WhatsApp no entrega correo y el modelo lo exige. `.invalid` es un dominio reservado
+# que nunca recibe correo, así que este valor no se confunde con uno real.
+PLACEHOLDER_EMAIL_DOMAIN = "whatsapp.invalid"
+
 
 def validate_phone(value: str) -> None:
     digit_count = sum(character.isdigit() for character in value)
@@ -42,6 +46,9 @@ class Client(models.Model):
         "estado", max_length=10, choices=Status.choices, default=Status.PROSPECT
     )
     search_text = models.CharField(max_length=241, blank=True, editable=False)
+    whatsapp_id = models.CharField(
+        "número de WhatsApp", max_length=15, null=True, blank=True, unique=True, editable=False
+    )
     created_at = models.DateTimeField("creado", auto_now_add=True)
     updated_at = models.DateTimeField("actualizado", auto_now=True)
 
@@ -67,6 +74,10 @@ class Client(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} <{self.email}>"
+
+    @property
+    def has_real_email(self) -> bool:
+        return not self.email.endswith(f"@{PLACEHOLDER_EMAIL_DOMAIN}")
 
     def clean(self) -> None:
         """Normaliza el correo y reporta duplicados en su campo, no como error general."""
