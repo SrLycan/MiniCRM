@@ -1,0 +1,68 @@
+{% extends "app.html" %}
+{% load static %}
+
+{% block title %}WhatsApp · Órbita CRM{% endblock %}
+
+{% block content %}
+<header class="page-header">
+  <div>
+    <p class="eyebrow">Mensajes</p>
+    <h1 class="page-header__title">WhatsApp</h1>
+  </div>
+  <button class="button button--primary" id="simulate-new-chat" type="button">
+    <span class="button__label">Simular cliente nuevo</span>
+  </button>
+</header>
+
+<p class="chat-notice">
+  Modo simulación: los mensajes se guardan en el CRM, pero no se envían a WhatsApp.
+</p>
+
+<section class="chat solid" id="chat" data-pane="list" aria-label="Conversaciones de WhatsApp">
+  <div class="chat-list">
+    <ul class="chat-list__items" id="conversation-list"></ul>
+    <div class="table-state" id="conversation-state" hidden></div>
+  </div>
+
+  <div class="chat-panel">
+    <p class="chat-placeholder" id="chat-placeholder">Elige una conversación para leerla y responder.</p>
+
+    <div class="chat-room" id="chat-room" hidden>
+      <header class="chat-header">
+        <button class="icon-button chat-header__back" id="chat-back" type="button" aria-label="Volver a las conversaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="chat-header__client" id="chat-client"></div>
+        <button class="button button--ghost chat-header__edit" id="chat-edit" type="button">
+          <span class="button__label">Editar datos del cliente</span>
+        </button>
+      </header>
+
+      <ol class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Mensajes"></ol>
+
+      <p class="chat-unavailable" id="chat-unavailable" hidden>
+        Agrega un teléfono válido a este cliente para poder chatear.
+      </p>
+
+      <form class="chat-form" id="chat-form" novalidate>
+        <div class="chat-form__row">
+          <label class="visually-hidden" for="chat-input">Escribe un mensaje</label>
+          <textarea class="input chat-form__input" id="chat-input" name="body" rows="1" maxlength="1000" placeholder="Escribe un mensaje" autocomplete="off"></textarea>
+          <button class="button button--primary" id="chat-send" type="submit">
+            <span class="button__label">Enviar</span>
+          </button>
+        </div>
+        <p class="field__error" id="chat-error" role="alert"></p>
+        <button class="chat-form__simulate" id="chat-simulate-reply" type="button">
+          <span class="button__label">Simular respuesta del cliente</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="module" src="{% static 'js/pages/whatsapp-page.js' %}"></script>
+{% endblock %}

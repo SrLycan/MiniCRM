@@ -1,4 +1,5 @@
 const CLIENTS_URL = "/api/clients/";
+const CONVERSATIONS_URL = "/api/conversations/";
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
 export class ApiError extends Error {
@@ -75,5 +76,20 @@ export const clientsApi = {
   },
   simulateWhatsApp() {
     return request(`${CLIENTS_URL}simulate-whatsapp/`, { method: "POST" });
+  },
+};
+
+export const conversationsApi = {
+  list() {
+    return request(CONVERSATIONS_URL);
+  },
+  get(clientId, signal) {
+    return request(`${CONVERSATIONS_URL}${clientId}/`, { signal });
+  },
+  send(clientId, body) {
+    return request(`${CONVERSATIONS_URL}${clientId}/messages/`, { method: "POST", body: { body } });
+  },
+  simulateReply(clientId) {
+    return request(`${CONVERSATIONS_URL}${clientId}/simulate-reply/`, { method: "POST" });
   },
 };
