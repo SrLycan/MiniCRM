@@ -21,6 +21,19 @@ export function createActionButton({ icon, label, action, isDanger = false }) {
   );
 }
 
+/** Enlace al chat del cliente; sin teléfono no hay a quién escribirle. */
+export function createChatLinks(client) {
+  if (!client.phone) return [];
+  const label = `Abrir el chat de ${client.name}`;
+  return [
+    createElement(
+      "a",
+      { class: "icon-button", href: `/whatsapp/?cliente=${client.id}`, "aria-label": label, title: label },
+      createIcon("chat"),
+    ),
+  ];
+}
+
 function createEmailContent({ email }) {
   if (!email) return "";
   return createElement("a", { class: "client-email", href: `mailto:${email}`, title: email }, email);
@@ -42,6 +55,7 @@ function createRow(client, index) {
     createElement(
       "td",
       { class: "client-actions" },
+      ...createChatLinks(client),
       createActionButton({ icon: "edit", label: `Editar a ${client.name}`, action: "edit" }),
       createActionButton({
         icon: "trash",
