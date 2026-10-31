@@ -1,7 +1,7 @@
 # Spec: Tablero Kanban y WhatsApp simulado
 
-Dos mejoras visibles sobre Órbita CRM, sin romper la simplicidad del proyecto base
-descrito en `SPEC.md`.
+Mejoras visibles sobre Órbita CRM, sin romper la simplicidad del proyecto base descrito en
+`SPEC.md`.
 
 **Fuera de alcance:** etapas nuevas de venta, bandeja de conversaciones e integración real
 con Meta.
@@ -94,3 +94,26 @@ simulación y un toast confirma el prospecto creado.
 - [x] Editar un prospecto de WhatsApp exige un correo real y conserva su origen.
 - [x] Mover un prospecto de WhatsApp en el tablero funciona aunque no tenga correo real.
 - [x] El botón crea un prospecto visible sin recargar, en ambas vistas.
+
+## Deshacer al eliminar
+
+**Objetivo:** recuperarse de un error sin perder la confirmación previa que exige el
+enunciado.
+
+- Al confirmar, el cliente desaparece de la vista y un toast ofrece **Deshacer** durante 6
+  segundos. El foco pasa a ese botón para quien usa el teclado.
+- El `DELETE` se envía cuando termina ese tiempo. Deshacer solo cancela el envío, así que el
+  cliente conserva su `id` y su fecha de creación, sin papelera ni cambios en el modelo.
+- Mientras el borrado está pendiente, el cliente no aparece en la tabla ni en el tablero,
+  aunque se busque o se cambie de vista.
+- Si la persona sale de la página antes de tiempo, el `DELETE` se envía con `keepalive`.
+- Si el servidor rechaza el borrado, un toast lo informa y el cliente vuelve a la lista.
+
+### Criterios de aceptación
+
+- [x] Sigue pidiendo confirmación antes de eliminar.
+- [x] Deshacer devuelve al cliente con sus mismos datos, en ambas vistas.
+- [x] Sin Deshacer, el cliente se elimina de verdad al terminar el tiempo.
+- [x] Salir de la página durante el tiempo de espera elimina al cliente.
+- [x] Un error del servidor devuelve al cliente y se informa.
+- [x] Varias eliminaciones seguidas se deshacen por separado.

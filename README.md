@@ -15,6 +15,7 @@ vacante de Desarrollador/a de Software Junior en CEO Marketing.
 - Búsqueda dinámica por nombre o empresa, sin distinguir mayúsculas ni acentos.
 - Filtro por estado, orden por columnas y paginación, conservados en la URL.
 - Tablero Kanban por estado: arrastrar con ratón, o selector con teclado y en móvil.
+- Eliminar con confirmación y opción de deshacer durante 6 segundos.
 - WhatsApp simulado: un webhook firmado convierte cada mensaje en un prospecto.
 - Validación inmediata en el navegador y validación definitiva en el backend.
 - Mensajes toast, esqueletos de carga y estados vacío y de error con reintento.

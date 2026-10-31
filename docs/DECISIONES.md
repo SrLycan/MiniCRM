@@ -32,3 +32,4 @@ Cada decisión lleva su motivo, para no rediscutirla y para poder explicarla en 
 | 26 | La simulación pasa por el mismo código del webhook | Lo que se muestra es el flujo real, y el secreto se queda en el servidor |
 | 27 | El webhook responde 503 si no hay secreto | Sin clave no se puede verificar la firma, así que falla cerrado en vez de aceptar mensajes |
 | 28 | El texto de los mensajes no se guarda | No hay bandeja de conversaciones, y así no se almacenan datos personales sin uso |
+| 29 | Deshacer aplaza el `DELETE` en el navegador, sin papelera en la base de datos | No cambia el modelo ni la regla de correo único, y el cliente conserva su `id` y su fecha; al salir de la página se envía con `keepalive` |

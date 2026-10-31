@@ -418,6 +418,23 @@
   color: var(--toast-color);
 }
 
+.toast__action {
+  flex: none;
+  min-height: 32px;
+  margin: -4px -6px -4px auto;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+  transition: background var(--fast);
+}
+
+.toast__action:hover {
+  background: var(--surface-hover);
+}
+
 /* Esqueletos de carga */
 
 .skeleton {
