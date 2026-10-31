@@ -5,9 +5,9 @@ Mismo flujo que `PLAN.md`: una rama `feature/*` por fase, fusionada a `develop` 
 
 ## Fase 1: Tablero Kanban (`feature/kanban`)
 
-- [ ] Spec y plan
-- [ ] API: `PATCH` de estado y `page_size`, con pruebas
-- [ ] Cliente de API y aviso de columna, con prueba de JS
+- [x] Spec y plan
+- [x] API: `PATCH` de estado y `page_size`, con pruebas
+- [x] Cliente de API y aviso de columna, con prueba de JS
 - [ ] Marcado y estilos del tablero
 - [ ] Vista de tablero con alternador, búsqueda y estados de interfaz
 - [ ] Mover con selector, y arrastrar y soltar
