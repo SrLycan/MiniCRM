@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+{% include "partials/icons.html" %}
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="app">
+  <aside class="sidebar glass" aria-label="Navegación principal">
+    <a class="brand" href="{% url 'clients:dashboard' %}">
+      {% include "partials/logo.html" %}
+      <span class="brand__name">Órbita</span>
+    </a>
+
+    <nav class="nav">
+      <a class="nav__link" href="{% url 'clients:dashboard' %}" {% if active_page == "dashboard" %}aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="9" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="15" width="8" height="6" rx="2"/></svg>
+        <span class="nav__label">Panel</span>
+      </a>
+      <a class="nav__link" href="{% url 'clients:client_list' %}" {% if active_page == "clients" %}aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4.5a4 4 0 0 1 0 7"/><path d="M19 15a7 7 0 0 1 3 6"/></svg>
+        <span class="nav__label">Clientes</span>
+      </a>
+    </nav>
+
+    <div class="sidebar__footer">
+      <p class="sidebar__user">
+        <strong>{{ user.first_name|default:user.username }}</strong>
+        Sesión activa
+      </p>
+      <button class="nav__link" type="button" data-theme-toggle>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10Z"/></svg>
+        <span class="nav__label">Modo claro</span>
+      </button>
+      <form method="post" action="{% url 'accounts:logout' %}">
+        {% csrf_token %}
+        <button class="nav__link" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 16l-4-4 4-4"/><path d="M6 12h10"/></svg>
+          <span class="nav__label">Cerrar sesión</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="main__inner">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+{% include "partials/client_dialog.html" %}
+{% include "partials/delete_dialog.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'js/app.js' %}"></script>
+{% endblock %}

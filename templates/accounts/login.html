@@ -1,1 +1,64 @@
-<form method="post">{% csrf_token %}{{ form }}{{ lockout_message }}</form>
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Iniciar sesión · Órbita CRM{% endblock %}
+
+{% block body %}
+<main class="login">
+  <section class="login__intro rise-in">
+    <a class="brand" href="{% url 'accounts:login' %}">
+      {% include "partials/logo.html" %}
+      <span>Órbita</span>
+    </a>
+    <div>
+      <p class="eyebrow">Mini CRM de clientes</p>
+      <h1 class="login__title">Tus clientes, siempre en <em>órbita</em>.</h1>
+    </div>
+    <p class="login__lead">Registra prospectos, sigue cada relación y mira de un vistazo cómo avanza tu cartera.</p>
+  </section>
+
+  <section class="login__card glass rise-in" style="--order: 1" aria-labelledby="login-title">
+    <h2 class="login__card-title" id="login-title">Inicia sesión</h2>
+
+    {% if lockout_message %}
+      <p class="alert" role="alert">{{ lockout_message }}</p>
+    {% elif form.non_field_errors %}
+      <p class="alert" role="alert">Usuario o contraseña incorrectos.</p>
+    {% endif %}
+
+    <form class="login__form" method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <div class="field">
+        <label class="field__label" for="id_username">Usuario</label>
+        <input class="input" id="id_username" name="username" autocomplete="username" autofocus required value="{{ form.username.value|default:'' }}">
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="id_password">Contraseña</label>
+        <div class="field__control">
+          <input class="input password-input" id="id_password" name="password" type="password" autocomplete="current-password" required>
+          <button class="icon-button password-toggle" type="button" data-password-toggle aria-label="Mostrar contraseña" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <button class="button button--primary" type="submit" data-loading-submit>
+        <span class="button__label">Entrar</span>
+      </button>
+    </form>
+
+    {% if demo_hint %}
+      <p class="demo-hint">
+        Cuenta de demostración: <code>{{ demo_hint.username }}</code> / <code>{{ demo_hint.password }}</code>
+      </p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'js/pages/login-page.js' %}"></script>
+{% endblock %}
