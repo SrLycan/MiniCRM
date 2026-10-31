@@ -3,10 +3,12 @@ from django.contrib.auth.views import LoginView
 from django.http import HttpRequest, HttpResponse
 
 from . import throttle
+from .forms import LoginForm
 
 
 class ThrottledLoginView(LoginView):
     template_name = "accounts/login.html"
+    authentication_form = LoginForm
     redirect_authenticated_user = True
 
     def get_context_data(self, **kwargs) -> dict:

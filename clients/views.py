@@ -20,6 +20,7 @@ from .whatsapp import WebhookRejected, build_simulated_message, receive_webhook,
 
 PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
+SEARCH_MAX_LENGTH = 100
 STATS_WEEKS = 6
 RECENT_CLIENTS = 5
 SORTABLE_FIELDS = {"name", "company", "email", "status", "created_at"}
@@ -79,7 +80,7 @@ class ClientCollectionApiView(ApiView):
     def get(self, request: HttpRequest) -> JsonResponse:
         clients = Client.objects.all()
 
-        query = request.GET.get("q", "").strip()
+        query = request.GET.get("q", "").strip()[:SEARCH_MAX_LENGTH]
         if query:
             clients = clients.filter(search_text__contains=normalize_search_text(query))
 
