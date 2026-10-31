@@ -1,0 +1,12 @@
+<dialog class="dialog dialog--small solid" id="delete-dialog" role="alertdialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-text">
+  <h2 class="dialog__title" id="delete-dialog-title">¿Eliminar este cliente?</h2>
+  <p class="dialog__text" id="delete-dialog-text" style="margin-top: 12px">
+    Vas a eliminar a <strong id="delete-dialog-name"></strong>. Esta acción no se puede deshacer.
+  </p>
+  <div class="dialog__actions">
+    <button class="button button--ghost" type="button" data-dialog-close autofocus>Cancelar</button>
+    <button class="button button--danger" type="button" id="delete-confirm">
+      <span class="button__label">Eliminar</span>
+    </button>
+  </div>
+</dialog>
