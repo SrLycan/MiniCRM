@@ -1,7 +1,7 @@
 # Plan de implementación
 
 Flujo de Git: `main` estable, `develop` de integración y una rama `feature/*` por fase,
-fusionada con `--no-ff`. Commits convencionales en inglés, como los ejemplos del enunciado.
+fusionada con `--no-ff`. Commits convencionales en español desde la corrección de las pruebas JS.
 Cada fase termina verificada antes de pasar a la siguiente.
 
 ## Fase 0: Base del repositorio
