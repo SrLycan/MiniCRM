@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+/data/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Node (solo para pruebas)
+node_modules/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Asistentes
+.claude/
+CLAUDE.md
