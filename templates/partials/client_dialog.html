@@ -1,0 +1,56 @@
+<dialog class="dialog solid" id="client-dialog" aria-labelledby="client-dialog-title">
+  <header class="dialog__header">
+    <div>
+      <p class="eyebrow" id="client-dialog-eyebrow">Nuevo registro</p>
+      <h2 class="dialog__title" id="client-dialog-title">Nuevo cliente</h2>
+    </div>
+    <button class="icon-button" type="button" data-dialog-close aria-label="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </header>
+
+  <form id="client-form" novalidate>
+    <div class="form-grid">
+      <div class="field form-grid__wide">
+        <label class="field__label" for="client-name">Nombre</label>
+        <input class="input" id="client-name" name="name" maxlength="120" autocomplete="off" required aria-describedby="client-name-error">
+        <p class="field__error" id="client-name-error"></p>
+      </div>
+
+      <div class="field form-grid__wide">
+        <label class="field__label" for="client-email">Correo</label>
+        <input class="input" id="client-email" name="email" type="email" maxlength="254" autocomplete="off" inputmode="email" required aria-describedby="client-email-error">
+        <p class="field__error" id="client-email-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="client-company">Empresa <span class="field__optional">(opcional)</span></label>
+        <input class="input" id="client-company" name="company" maxlength="120" autocomplete="off" aria-describedby="client-company-error">
+        <p class="field__error" id="client-company-error"></p>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="client-phone">Teléfono <span class="field__optional">(opcional)</span></label>
+        <input class="input" id="client-phone" name="phone" type="tel" maxlength="20" autocomplete="off" aria-describedby="client-phone-error">
+        <p class="field__error" id="client-phone-error"></p>
+      </div>
+
+      <div class="field form-grid__wide">
+        <label class="field__label" for="client-status">Estado</label>
+        <select class="input" id="client-status" name="status" required aria-describedby="client-status-error">
+          {% for value, label in statuses %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="field__error" id="client-status-error"></p>
+      </div>
+    </div>
+
+    <div class="dialog__actions">
+      <button class="button button--ghost" type="button" data-dialog-close>Cancelar</button>
+      <button class="button button--primary" type="submit">
+        <span class="button__label" id="client-submit-label">Guardar cliente</span>
+      </button>
+    </div>
+  </form>
+</dialog>

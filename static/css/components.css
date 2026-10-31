@@ -1,0 +1,469 @@
+/* Superficies: el cristal enmarca, lo sólido se lee. */
+
+.glass {
+  position: relative;
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+.glass--strong {
+  background: var(--glass-strong);
+  border-color: var(--accent-glow);
+}
+
+.glass--interactive {
+  overflow: hidden;
+  transition: transform var(--normal) var(--ease), border-color var(--normal), box-shadow var(--normal);
+}
+
+.glass--interactive::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(147, 214, 248, .16) 50%, transparent 65%);
+  transform: translateX(-110%);
+  transition: transform .8s var(--ease);
+  pointer-events: none;
+}
+
+.glass--interactive:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: var(--glass-shadow), 0 0 28px -8px var(--accent-glow);
+}
+
+.glass--interactive:hover::after {
+  transform: translateX(110%);
+}
+
+.solid {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--glass-fallback);
+  }
+}
+
+@media (max-width: 639px) {
+  .glass {
+    background: var(--glass-fallback);
+    backdrop-filter: none;
+  }
+
+  .glass--interactive::after {
+    display: none;
+  }
+}
+
+/* Botones */
+
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 46px;
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast), background var(--fast), border-color var(--fast);
+}
+
+.button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(.98);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.button--primary {
+  background: linear-gradient(135deg, #5cc6f7, var(--accent));
+  color: var(--on-accent);
+  box-shadow: 0 10px 26px -12px var(--accent-glow);
+}
+
+[data-theme="light"] .button--primary {
+  background: var(--accent);
+}
+
+.button--primary:hover:not(:disabled) {
+  box-shadow: 0 14px 32px -10px var(--accent-glow);
+}
+
+.button--ghost {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.button--ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.button--danger {
+  background: var(--danger-solid);
+  color: var(--on-danger);
+}
+
+.button__label {
+  transition: opacity var(--fast);
+}
+
+.button.is-loading .button__label {
+  opacity: 0;
+}
+
+.button.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: orbit-spin .7s linear infinite;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-soft);
+  transition: background var(--fast), color var(--fast);
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-button:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.icon-button--danger:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Campos */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  color: var(--text-soft);
+  font-size: .9rem;
+  font-weight: 500;
+}
+
+.field__optional {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.field__control {
+  position: relative;
+  display: flex;
+}
+
+.input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  transition: border-color var(--fast), box-shadow var(--fast);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.input:hover {
+  border-color: var(--text-faint);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+.field__error {
+  min-height: 1.25em;
+  color: var(--danger);
+  font-size: .85rem;
+}
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: .95rem;
+}
+
+/* Insignias de estado */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge--prospect { background: var(--prospect-soft); color: var(--prospect); }
+.badge--client { background: var(--client-soft); color: var(--client); }
+.badge--inactive { background: var(--inactive-soft); color: var(--inactive); }
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: hsl(var(--avatar-hue) 55% 30%);
+  color: #fff;
+  font-family: var(--font-title);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* Diálogos */
+
+.dialog {
+  width: min(520px, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100dvh - 2 * var(--space-4));
+  padding: var(--space-5);
+  overflow-y: auto;
+  color: var(--text);
+  animation: dialog-in var(--normal) var(--ease);
+}
+
+.dialog::backdrop {
+  background: rgba(3, 8, 13, .62);
+  backdrop-filter: blur(4px);
+  animation: fade-in var(--normal) var(--ease);
+}
+
+.dialog.is-closing {
+  animation: dialog-out var(--fast) ease-in forwards;
+}
+
+.dialog.is-closing::backdrop {
+  animation: fade-out var(--fast) ease-in forwards;
+}
+
+.dialog--small {
+  width: min(420px, calc(100vw - 2 * var(--space-4)));
+}
+
+.dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dialog__title {
+  font-size: 1.35rem;
+}
+
+.dialog__text {
+  color: var(--text-soft);
+}
+
+.dialog__text strong {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-4);
+}
+
+.form-grid__wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 639px) {
+  .dialog {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 92dvh;
+    margin: auto 0 0;
+    border-width: 1px 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    animation-name: sheet-in;
+  }
+
+  .dialog.is-closing {
+    animation-name: sheet-out;
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dialog__actions .button {
+    flex: 1;
+  }
+}
+
+/* Toasts */
+
+.toasts {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(360px, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--toast-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+  animation: toast-in var(--normal) var(--ease);
+}
+
+.toast.is-leaving {
+  animation: toast-out var(--fast) ease-in forwards;
+}
+
+.toast--success { --toast-color: var(--client); }
+.toast--error { --toast-color: var(--danger); }
+
+.toast__icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--toast-color);
+}
+
+/* Esqueletos de carga */
+
+.skeleton {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-raised) 25%, var(--surface-hover) 50%, var(--surface-raised) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(14px) scale(.98); }
+}
+
+@keyframes dialog-out {
+  to { opacity: 0; transform: translateY(8px) scale(.98); }
+}
+
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+}
+
+@keyframes sheet-out {
+  to { transform: translateY(100%); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(24px); }
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+.rise-in {
+  animation: rise-in 520ms var(--ease) backwards;
+  animation-delay: calc(var(--order, 0) * 70ms);
+}

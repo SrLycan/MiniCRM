@@ -15,8 +15,11 @@ Cada decisión lleva su motivo, para no rediscutirla y para poder explicarla en 
 | 9 | `<dialog>` nativo para los modales | Da foco, tecla Esc y capa superior sin código adicional |
 | 10 | Datos pintados con `textContent` | Previene XSS con datos escritos por usuarios |
 | 11 | Gráficos en SVG hechos a mano | Evita dependencias y demuestra dominio del frontend |
-| 12 | Commits en inglés; interfaz y documentación en español | Sigue los ejemplos del enunciado y al público del producto |
+| 12 | Interfaz, documentación y commits en español; identificadores de código en inglés | Coherencia con el idioma del equipo y con los campos del modelo sugerido |
 | 13 | Docs de trabajo en `docs/` | Muestran el proceso: primero el spec, luego el plan y al final el código |
 | 14 | Plantillas y estáticos a nivel de proyecto | Los comparten `accounts` y `clients` |
 | 15 | Bloqueo de login con la caché de Django y un solo proceso de Gunicorn | Sin dependencias extra; un proceso con hilos basta para SQLite y comparte la caché |
 | 16 | Token CSRF en una etiqueta meta y cookie `HttpOnly` | JavaScript no necesita leer la cookie |
+| 17 | Campo `search_text` normalizado | SQLite no ignora acentos ni mayúsculas fuera de ASCII; sin esto "jose" no encontraría a "José" |
+| 18 | Tarjetas por debajo de 900 px en lugar de ocultar columnas | El enunciado exige mostrar los cinco datos y evita el desplazamiento horizontal |
+| 19 | WhiteNoise con archivos comprimidos, sin nombres con hash | Los módulos ES usan rutas relativas y no hay un paso de compilación que las reescriba |
