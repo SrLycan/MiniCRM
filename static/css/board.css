@@ -1,0 +1,182 @@
+.view-switch {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+}
+
+.view-switch__button {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-soft);
+  font-weight: 500;
+  transition: background var(--fast), color var(--fast);
+}
+
+.view-switch__button:hover {
+  color: var(--text);
+}
+
+.view-switch__button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* Las columnas ya agrupan por estado, así que estos controles no aplican al tablero. */
+.toolbar[data-view="board"] .chips,
+.toolbar[data-view="board"] .sort-select {
+  display: none;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--column-color);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  transition: border-color var(--fast), background var(--fast);
+}
+
+.board-column--prospect { --column-color: var(--prospect); }
+.board-column--client { --column-color: var(--client); }
+.board-column--inactive { --column-color: var(--inactive); }
+
+.board-column.is-drop-target {
+  border-color: var(--column-color);
+  background: var(--surface-hover);
+}
+
+.board-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.board-column__title {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.board-column__count {
+  min-width: 28px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-soft);
+  font-size: .85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.board-column__note {
+  color: var(--text-faint);
+  font-size: .85rem;
+}
+
+.board-column__cards {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 96px;
+}
+
+.board-column__cards:empty::before {
+  content: "Sin clientes";
+  display: grid;
+  flex: 1;
+  place-items: center;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: .9rem;
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  animation: rise-in 360ms var(--ease) backwards;
+  animation-delay: calc(var(--order, 0) * 28ms);
+}
+
+.board-card[draggable="true"] {
+  cursor: grab;
+}
+
+.board-card.is-dragging {
+  opacity: .5;
+}
+
+.board-card--skeleton {
+  animation: none;
+}
+
+.board-card__name {
+  color: var(--text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.board-card__company {
+  color: var(--text-soft);
+  font-size: .92rem;
+  overflow-wrap: anywhere;
+}
+
+.board-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.board-card__status {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding-block: 0;
+}
+
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .board-card[draggable="true"] {
+    cursor: auto;
+  }
+
+  .board-column__cards {
+    min-height: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-card {
+    animation: none;
+  }
+}
