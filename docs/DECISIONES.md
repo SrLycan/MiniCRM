@@ -23,3 +23,12 @@ Cada decisión lleva su motivo, para no rediscutirla y para poder explicarla en 
 | 17 | Campo `search_text` normalizado | SQLite no ignora acentos ni mayúsculas fuera de ASCII; sin esto "jose" no encontraría a "José" |
 | 18 | Tarjetas por debajo de 900 px en lugar de ocultar columnas | El enunciado exige mostrar los cinco datos y evita el desplazamiento horizontal |
 | 19 | WhiteNoise con archivos comprimidos, sin nombres con hash | Los módulos ES usan rutas relativas y no hay un paso de compilación que las reescriba |
+| 20 | Kanban sobre los 3 estados existentes, sin etapas nuevas | Da una vista útil sin cambiar el modelo ni complicar el alcance |
+| 21 | `PATCH` solo para el estado, con su propio formulario | Mover una tarjeta no debe exigir ni reenviar los demás datos, y un prospecto de WhatsApp aún no tiene correo real |
+| 22 | Arrastrar con HTML nativo y selector de estado en cada tarjeta | Arrastrar no funciona con teclado ni con el dedo; el selector cubre ambos casos sin librerías |
+| 23 | El tablero pide una consulta por columna, con 50 clientes como máximo | Cada columna conoce su total real y la página no carga toda la cartera |
+| 24 | Correo reservado `<número>@whatsapp.invalid` para prospectos de WhatsApp | Volver opcional el correo cambiaría su regla única y el formulario; `.invalid` nunca entrega correo y la API lo devuelve vacío |
+| 25 | `whatsapp_id` único en lugar de un campo `source` | Un solo campo identifica al prospecto, evita duplicados por reintentos y también indica el origen |
+| 26 | La simulación pasa por el mismo código del webhook | Lo que se muestra es el flujo real, y el secreto se queda en el servidor |
+| 27 | El webhook responde 503 si no hay secreto | Sin clave no se puede verificar la firma, así que falla cerrado en vez de aceptar mensajes |
+| 28 | El texto de los mensajes no se guarda | No hay bandeja de conversaciones, y así no se almacenan datos personales sin uso |

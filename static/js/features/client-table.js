@@ -1,4 +1,4 @@
-import { createAvatar, createElement, createIcon, createStatusBadge } from "../core/dom.js";
+import { createClientIdentity, createElement, createIcon, createStatusBadge } from "../core/dom.js";
 
 const SKELETON_ROWS = 6;
 const COLUMN_COUNT = 6;
@@ -12,13 +12,18 @@ function createCell(label, ...content) {
   );
 }
 
-function createActionButton({ icon, label, action, isDanger = false }) {
+export function createActionButton({ icon, label, action, isDanger = false }) {
   const className = isDanger ? "icon-button icon-button--danger" : "icon-button";
   return createElement(
     "button",
     { class: className, type: "button", "data-action": action, "aria-label": label, title: label },
     createIcon(icon),
   );
+}
+
+function createEmailContent({ email }) {
+  if (!email) return "";
+  return createElement("a", { class: "client-email", href: `mailto:${email}`, title: email }, email);
 }
 
 function createRow(client, index) {
@@ -28,24 +33,10 @@ function createRow(client, index) {
     "data-client-id": client.id,
   });
 
-  const identity = createElement(
-    "div",
-    { class: "client-identity" },
-    createAvatar(client.name),
-    createElement("span", { class: "client-identity__name" }, client.name),
-  );
-
   row.append(
-    createCell("Nombre", identity),
+    createCell("Nombre", createClientIdentity(client)),
     createCell("Empresa", client.company),
-    createCell(
-      "Correo",
-      createElement(
-        "a",
-        { class: "client-email", href: `mailto:${client.email}`, title: client.email },
-        client.email,
-      ),
-    ),
+    createCell("Correo", createEmailContent(client)),
     createCell("Teléfono", client.phone),
     createCell("Estado", createStatusBadge(client)),
     createElement(
