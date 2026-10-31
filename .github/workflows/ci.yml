@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+env:
+  DJANGO_DEBUG: "true"
+
+jobs:
+  checks:
+    name: Pruebas e imagen Docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Revisar el proyecto Django
+        run: python manage.py check
+
+      - name: Comprobar que no faltan migraciones
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Ejecutar pruebas de Django
+        run: python manage.py test
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Ejecutar pruebas de JavaScript
+        run: npm test
+
+      - name: Construir la imagen Docker
+        run: docker build --tag orbita-crm .
