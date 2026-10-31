@@ -134,8 +134,10 @@ curl -i http://localhost:8000/api/webhooks/whatsapp/ \
   la tabla, los formularios y los modales usan superficies sólidas con contraste AA.
 - **Reglas críticas en la base de datos.** El correo único y los estados válidos también
   son restricciones de SQLite, y `ClientForm` traduce los errores a mensajes claros.
-- **Seguridad básica.** CSRF en toda escritura, secretos por variables de entorno, datos
-  pintados con `textContent` para evitar XSS y contenedor sin usuario root.
+- **Seguridad.** CSRF en toda escritura, secretos por variables de entorno, datos pintados
+  con `textContent` para evitar XSS, política CSP sin scripts en línea, límites de longitud
+  y de tamaño, bloqueo del login por usuario e IP, también en Admin, y contenedor sin root.
+  Para publicar la app, cambia todos los valores de `.env.example` y activa `DJANGO_HTTPS`.
 
 El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md),
 [docs/SPEC-MEJORAS.md](docs/SPEC-MEJORAS.md), [docs/PLAN-MEJORAS.md](docs/PLAN-MEJORAS.md) y
@@ -145,7 +147,6 @@ El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md),
 
 - Las credenciales de `.env.example` son solo para esta demo. Fuera de ella, cambia la
   clave secreta y la contraseña, y pon `DEMO_LOGIN_HINT=false`.
-- El login de Django Admin no tiene el bloqueo por intentos de la aplicación.
 - Un mensaje de WhatsApp de alguien ya registrado a mano crea un prospecto aparte, porque
   se identifica por `whatsapp_id` y no compara teléfonos escritos en otro formato.
 - En el tablero, arrastrar funciona con ratón; en pantallas táctiles se usa el selector.

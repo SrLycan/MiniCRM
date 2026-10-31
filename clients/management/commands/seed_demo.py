@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
@@ -66,9 +67,11 @@ class Command(BaseCommand):
         user, _ = get_user_model().objects.get_or_create(username=settings.DEMO_USERNAME)
         user.first_name = "Equipo"
         user.is_staff = True
-        user.is_superuser = True
+        user.is_superuser = False
         user.set_password(settings.DEMO_PASSWORD)
         user.save()
+        # Sus credenciales son públicas en la demo: entra al Admin, pero solo a clientes.
+        user.user_permissions.set(Permission.objects.filter(content_type__app_label="clients"))
 
     @staticmethod
     def create_client(name: str, company: str, phone: str, status: str, age_in_days: int) -> bool:
