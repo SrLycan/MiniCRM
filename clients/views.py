@@ -11,11 +11,12 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
-from .forms import ClientForm
+from .forms import ClientForm, ClientStatusForm
 from .models import Client, normalize_search_text
 from .serializers import serialize_client
 
 PAGE_SIZE = 10
+MAX_PAGE_SIZE = 100
 STATS_WEEKS = 6
 RECENT_CLIENTS = 5
 SORTABLE_FIELDS = {"name", "company", "email", "status", "created_at"}
@@ -49,6 +50,14 @@ def parse_json_body(request: HttpRequest) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
+def parse_page_size(value: str | None) -> int:
+    """Admite un tamaño de página propio, acotado, y usa el normal si no es un número."""
+    try:
+        return min(max(int(value), 1), MAX_PAGE_SIZE)
+    except (TypeError, ValueError):
+        return PAGE_SIZE
+
+
 class ApiView(View):
     """Base de la API: exige sesión y responde JSON en vez de redirigir al login."""
 
@@ -61,7 +70,7 @@ class ApiView(View):
         return error_response("METHOD_NOT_ALLOWED", "Método no permitido.", 405)
 
 
-def save_client_form(form: ClientForm, success_status: int) -> JsonResponse:
+def save_client_form(form: ClientForm | ClientStatusForm, success_status: int) -> JsonResponse:
     if not form.is_valid():
         return validation_error_response(form.errors)
     try:
@@ -91,7 +100,8 @@ class ClientCollectionApiView(ApiView):
             sort = DEFAULT_SORT
         clients = clients.order_by(sort, "-id")
 
-        page = Paginator(clients, PAGE_SIZE).get_page(request.GET.get("page"))
+        page_size = parse_page_size(request.GET.get("page_size"))
+        page = Paginator(clients, page_size).get_page(request.GET.get("page"))
         return JsonResponse(
             {
                 "results": [serialize_client(client) for client in page],
@@ -99,7 +109,7 @@ class ClientCollectionApiView(ApiView):
                     "page": page.number,
                     "pages": page.paginator.num_pages,
                     "total": page.paginator.count,
-                    "page_size": PAGE_SIZE,
+                    "page_size": page_size,
                 },
             }
         )
@@ -125,6 +135,13 @@ class ClientDetailApiView(ApiView):
         if data is None:
             return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
         form = ClientForm(data, instance=Client.objects.get(pk=pk))
+        return save_client_form(form, success_status=200)
+
+    def patch(self, request: HttpRequest, pk: int) -> JsonResponse:
+        data = parse_json_body(request)
+        if data is None:
+            return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
+        form = ClientStatusForm(data, instance=Client.objects.get(pk=pk))
         return save_client_form(form, success_status=200)
 
     def delete(self, request: HttpRequest, pk: int) -> HttpResponse:

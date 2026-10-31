@@ -168,7 +168,7 @@ class ClientDetailTests(ApiTestCase):
             self.assertEqual(response.json()["code"], "CLIENT_NOT_FOUND")
 
     def test_unsupported_method_returns_json_405(self):
-        response = self.client.patch(detail_url(self.existing.pk))
+        response = self.client.trace(detail_url(self.existing.pk))
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response.json()["code"], "METHOD_NOT_ALLOWED")
 

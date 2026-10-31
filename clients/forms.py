@@ -3,6 +3,12 @@ from django import forms
 from .models import Client
 
 
+STATUS_ERROR_MESSAGES = {
+    "required": "Selecciona un estado.",
+    "invalid_choice": "Selecciona un estado válido.",
+}
+
+
 class ClientForm(forms.ModelForm):
     """Única fuente de validación de la API."""
 
@@ -18,8 +24,14 @@ class ClientForm(forms.ModelForm):
                 "required": "Ingresa el correo del cliente.",
                 "invalid": "Ingresa un correo válido.",
             },
-            "status": {
-                "required": "Selecciona un estado.",
-                "invalid_choice": "Selecciona un estado válido.",
-            },
+            "status": STATUS_ERROR_MESSAGES,
         }
+
+
+class ClientStatusForm(forms.ModelForm):
+    """Cambia solo el estado, sin exigir el resto de los datos del cliente."""
+
+    class Meta:
+        model = Client
+        fields = ["status"]
+        error_messages = {"status": STATUS_ERROR_MESSAGES}
