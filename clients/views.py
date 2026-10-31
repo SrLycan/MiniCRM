@@ -37,6 +37,11 @@ class ClientListView(LoginRequiredMixin, TemplateView):
     extra_context = {"active_page": "clients", "statuses": Client.Status.choices}
 
 
+class BoardView(LoginRequiredMixin, TemplateView):
+    template_name = "clients/board.html"
+    extra_context = {"active_page": "board", "statuses": Client.Status.choices}
+
+
 def error_response(code: str, message: str, status: int, errors: dict | None = None) -> JsonResponse:
     return JsonResponse({"code": code, "message": message, "errors": errors or {}}, status=status)
 

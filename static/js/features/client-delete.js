@@ -14,8 +14,10 @@ const pendingDeletions = createDeferredActions(UNDO_WINDOW_MS);
 
 let clientToDelete = null;
 
-export function isPendingDeletion(clientId) {
-  return pendingDeletions.has(clientId);
+/** Un cliente en espera de Deshacer sigue en el servidor, pero ya no se muestra. */
+export function withoutPendingDeletions(results, total) {
+  const clients = results.filter(({ id }) => !pendingDeletions.has(id));
+  return { clients, total: total - (results.length - clients.length) };
 }
 
 export function openDeleteDialog(client) {
