@@ -10,6 +10,8 @@ from django.db.models.functions import Lower
 PHONE_PATTERN = re.compile(r"^\+?[\d\s-]+$")
 PHONE_MIN_DIGITS = 7
 PHONE_MAX_DIGITS = 15
+ECUADOR_PREFIX = "593"
+ECUADOR_MIN_INTERNATIONAL_DIGITS = 11
 
 # WhatsApp no entrega correo y el modelo lo exige. `.invalid` es un dominio reservado
 # que nunca recibe correo, así que este valor no se confunde con uno real.
@@ -23,6 +25,14 @@ def validate_phone(value: str) -> None:
         raise ValidationError(
             "Ingresa un teléfono válido, de 7 a 15 dígitos.", code="invalid_phone"
         )
+
+
+def normalize_phone(phone: str) -> str:
+    """Reduce un teléfono a su número nacional: 099..., +593 99... y 59399... son el mismo."""
+    digits = "".join(character for character in phone if character.isdigit())
+    if digits.startswith(ECUADOR_PREFIX) and len(digits) >= ECUADOR_MIN_INTERNATIONAL_DIGITS:
+        return digits.removeprefix(ECUADOR_PREFIX)
+    return digits.removeprefix("0")
 
 
 def normalize_search_text(text: str) -> str:
@@ -46,6 +56,7 @@ class Client(models.Model):
         "estado", max_length=10, choices=Status.choices, default=Status.PROSPECT
     )
     search_text = models.CharField(max_length=241, blank=True, editable=False)
+    phone_key = models.CharField(max_length=20, blank=True, db_index=True, editable=False)
     whatsapp_id = models.CharField(
         "número de WhatsApp", max_length=15, null=True, blank=True, unique=True, editable=False
     )
@@ -88,4 +99,31 @@ class Client(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         self.search_text = normalize_search_text(f"{self.name} {self.company}")
+        self.phone_key = normalize_phone(self.phone)
         super().save(*args, **kwargs)
+
+
+class WhatsAppMessage(models.Model):
+    class Direction(models.TextChoices):
+        INBOUND = "in", "Recibido"
+        OUTBOUND = "out", "Enviado"
+
+    client = models.ForeignKey(
+        Client, verbose_name="cliente", on_delete=models.CASCADE, related_name="messages"
+    )
+    direction = models.CharField("dirección", max_length=3, choices=Direction.choices)
+    body = models.TextField("mensaje")
+    # Meta reintenta las entregas: este identificador evita guardar dos veces el mismo mensaje.
+    wa_message_id = models.CharField(max_length=128, null=True, blank=True, unique=True)
+    created_at = models.DateTimeField("creado", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "mensaje de WhatsApp"
+        verbose_name_plural = "mensajes de WhatsApp"
+        ordering = ["created_at", "id"]
+        indexes = [
+            models.Index(fields=["client", "created_at"], name="message_client_created_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_direction_display()}: {self.body[:40]}"

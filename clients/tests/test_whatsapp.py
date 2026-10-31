@@ -3,23 +3,28 @@ import json
 from django.test import SimpleTestCase, TestCase
 
 from clients.forms import ClientForm, ClientStatusForm
-from clients.models import Client
+from clients.models import Client, WhatsAppMessage, normalize_phone
 from clients.serializers import serialize_client
 from clients.whatsapp import (
     WebhookRejected,
     build_simulated_message,
+    build_simulated_reply,
     clean_name,
-    extract_senders,
+    extract_messages,
+    find_or_create_client,
     is_valid_signature,
     receive_webhook,
-    register_prospects,
+    register_messages,
     sign,
+    whatsapp_number_of,
 )
 
 SECRET = "secreto-de-prueba"
 
 
-def meta_payload(sender="593991234567", name="Lucía Paredes") -> dict:
+def meta_payload(
+    sender="593991234567", name="Lucía Paredes", message_id="wamid.1", text="Hola"
+) -> dict:
     return {
         "object": "whatsapp_business_account",
         "entry": [
@@ -29,7 +34,14 @@ def meta_payload(sender="593991234567", name="Lucía Paredes") -> dict:
                         "field": "messages",
                         "value": {
                             "contacts": [{"profile": {"name": name}, "wa_id": sender}],
-                            "messages": [{"from": sender, "id": "wamid.1", "type": "text"}],
+                            "messages": [
+                                {
+                                    "from": sender,
+                                    "id": message_id,
+                                    "type": "text",
+                                    "text": {"body": text},
+                                }
+                            ],
                         },
                     }
                 ]
@@ -58,19 +70,31 @@ class SignatureTests(SimpleTestCase):
         self.assertFalse(is_valid_signature(b"cuerpo", "sha256=ñandú", SECRET))
 
 
-class ExtractSendersTests(SimpleTestCase):
-    def test_reads_number_and_name(self):
-        self.assertEqual(
-            extract_senders(meta_payload()), [("593991234567", "Lucía Paredes")]
-        )
+class ExtractMessagesTests(SimpleTestCase):
+    def test_reads_number_name_id_and_text(self):
+        message = extract_messages(meta_payload())[0]
+        self.assertEqual(message.whatsapp_id, "593991234567")
+        self.assertEqual(message.name, "Lucía Paredes")
+        self.assertEqual(message.message_id, "wamid.1")
+        self.assertEqual(message.text, "Hola")
 
     def test_ignores_delivery_events(self):
         payload = {"entry": [{"changes": [{"value": {"statuses": [{"id": "wamid.1"}]}}]}]}
-        self.assertEqual(extract_senders(payload), [])
+        self.assertEqual(extract_messages(payload), [])
 
     def test_ignores_invalid_numbers(self):
         for sender in ("123", "1" * 16, "59399abc", "+593991234567", 593991234567):
-            self.assertEqual(extract_senders(meta_payload(sender=sender)), [])
+            self.assertEqual(extract_messages(meta_payload(sender=sender)), [])
+
+    def test_message_without_text_keeps_a_notice(self):
+        payload = meta_payload()
+        del payload["entry"][0]["changes"][0]["value"]["messages"][0]["text"]
+        self.assertEqual(extract_messages(payload)[0].text, "[Mensaje sin texto]")
+
+    def test_limits_the_text_and_the_identifier(self):
+        message = extract_messages(meta_payload(text="a" * 5000, message_id="b" * 200))[0]
+        self.assertEqual(len(message.text), 4096)
+        self.assertIsNone(message.message_id)
 
     def test_survives_unexpected_shapes(self):
         for payload in (
@@ -80,7 +104,18 @@ class ExtractSendersTests(SimpleTestCase):
             {"entry": [{"changes": [{"value": "x"}]}]},
             {"entry": [{"changes": [{"value": {"messages": [{}], "contacts": [{"profile": 1}]}}]}]},
         ):
-            self.assertEqual(extract_senders(payload), [])
+            self.assertEqual(extract_messages(payload), [])
+
+
+class NormalizePhoneTests(SimpleTestCase):
+    def test_all_formats_of_a_number_match(self):
+        for phone in ("0991234567", "099 123 4567", "+593 99 123 4567", "593991234567"):
+            self.assertEqual(normalize_phone(phone), "991234567")
+
+    def test_landline_and_foreign_numbers(self):
+        self.assertEqual(normalize_phone("+593 2 234 5605"), "22345605")
+        self.assertEqual(normalize_phone("+1 555 010 9999"), "15550109999")
+        self.assertEqual(normalize_phone(""), "")
 
 
 class CleanNameTests(SimpleTestCase):
@@ -95,38 +130,113 @@ class CleanNameTests(SimpleTestCase):
         self.assertEqual(len(clean_name("a" * 200, "593991234567")), 120)
 
 
-class RegisterProspectsTests(TestCase):
-    def test_creates_a_prospect(self):
-        client = register_prospects(meta_payload())[0]
+class RegisterMessagesTests(TestCase):
+    def test_creates_a_prospect_with_its_message(self):
+        message = register_messages(meta_payload())[0]
+        client = message.client
         self.assertEqual(client.name, "Lucía Paredes")
         self.assertEqual(client.phone, "+593991234567")
         self.assertEqual(client.status, Client.Status.PROSPECT)
         self.assertEqual(client.whatsapp_id, "593991234567")
         self.assertEqual(client.search_text, "lucia paredes ")
+        self.assertEqual(message.body, "Hola")
+        self.assertEqual(message.direction, WhatsAppMessage.Direction.INBOUND)
 
-    def test_same_number_does_not_duplicate(self):
-        first = register_prospects(meta_payload())[0]
-        second = register_prospects(meta_payload(name="Otro nombre"))[0]
+    def test_same_number_keeps_one_client_and_adds_messages(self):
+        first = register_messages(meta_payload())[0].client
+        second = register_messages(meta_payload(name="Otro", message_id="wamid.2"))[0].client
         self.assertEqual(first.pk, second.pk)
         self.assertEqual(Client.objects.count(), 1)
+        self.assertEqual(first.messages.count(), 2)
         second.refresh_from_db()
         self.assertEqual(second.name, "Lucía Paredes")
 
-    def test_real_email_keeps_the_prospect_identified(self):
-        client = register_prospects(meta_payload())[0]
-        Client.objects.filter(pk=client.pk).update(email="lucia@example.com")
-        register_prospects(meta_payload())
-        self.assertEqual(Client.objects.count(), 1)
+    def test_repeated_delivery_does_not_duplicate_the_message(self):
+        for _ in range(2):
+            register_messages(meta_payload())
+        self.assertEqual(WhatsAppMessage.objects.count(), 1)
 
     def test_several_prospects_coexist(self):
-        register_prospects(meta_payload(sender="593991234567"))
-        register_prospects(meta_payload(sender="593991234568"))
+        register_messages(meta_payload(sender="593991234567"))
+        register_messages(meta_payload(sender="593991234568", message_id="wamid.2"))
         self.assertEqual(Client.objects.count(), 2)
+
+    def test_real_email_keeps_the_prospect_identified(self):
+        client = register_messages(meta_payload())[0].client
+        Client.objects.filter(pk=client.pk).update(email="lucia@example.com")
+        register_messages(meta_payload(message_id="wamid.2"))
+        self.assertEqual(Client.objects.count(), 1)
+
+
+class RegisteredClientTests(TestCase):
+    """El cliente que ya existe conserva sus datos cuando escribe por WhatsApp."""
+
+    def setUp(self):
+        self.client_record = Client.objects.create(
+            name="Mateo Guerrero",
+            company="Andes Logística",
+            email="mateo@example.com",
+            phone="0991234567",
+            status=Client.Status.CLIENT,
+        )
+
+    def test_message_goes_to_the_existing_client(self):
+        message = register_messages(meta_payload(name="Mateo G."))[0]
+        self.assertEqual(message.client.pk, self.client_record.pk)
+        self.assertEqual(Client.objects.count(), 1)
+
+    def test_keeps_email_company_name_and_status(self):
+        register_messages(meta_payload(name="Mateo G."))
+        self.client_record.refresh_from_db()
+        self.assertEqual(self.client_record.email, "mateo@example.com")
+        self.assertEqual(self.client_record.company, "Andes Logística")
+        self.assertEqual(self.client_record.name, "Mateo Guerrero")
+        self.assertEqual(self.client_record.status, Client.Status.CLIENT)
+        self.assertEqual(self.client_record.phone, "0991234567")
+        self.assertEqual(self.client_record.whatsapp_id, "593991234567")
+
+    def test_phone_written_with_spaces_also_matches(self):
+        Client.objects.filter(pk=self.client_record.pk).delete()
+        other = Client.objects.create(name="Ana", email="ana@example.com", phone="+593 99 123 4567")
+        self.assertEqual(find_or_create_client("593991234567", "Ana R.").pk, other.pk)
+
+    def test_oldest_client_wins_when_a_phone_is_repeated(self):
+        Client.objects.create(name="Copia", email="copia@example.com", phone="0991234567")
+        client = find_or_create_client("593991234567", "Mateo G.")
+        self.assertEqual(client.pk, self.client_record.pk)
+
+    def test_client_without_phone_is_not_matched(self):
+        Client.objects.create(name="Sin teléfono", email="sin@example.com")
+        client = find_or_create_client("593990000000", "Nuevo")
+        self.assertEqual(client.name, "Nuevo")
+
+
+class WhatsAppNumberTests(TestCase):
+    def number_for(self, phone: str) -> str:
+        return whatsapp_number_of(Client(phone_key=normalize_phone(phone), phone=phone))
+
+    def test_local_number_gets_the_country_code(self):
+        self.assertEqual(self.number_for("0991234567"), "593991234567")
+
+    def test_landline_gets_the_country_code(self):
+        self.assertEqual(self.number_for("+593 2 234 5605"), "59322345605")
+
+    def test_foreign_number_stays_the_same(self):
+        self.assertEqual(self.number_for("+1 555 010 9999"), "15550109999")
+
+    def test_missing_phone_gives_nothing(self):
+        self.assertEqual(self.number_for(""), "")
+
+    def test_simulated_reply_keeps_the_client(self):
+        client = Client.objects.create(name="Ana", email="ana@example.com", phone="0991234567")
+        body = build_simulated_reply(client)
+        stored = receive_webhook(body, sign(body, SECRET), SECRET)[0]
+        self.assertEqual(stored.client.pk, client.pk)
 
 
 class SerializationTests(TestCase):
     def test_hides_the_placeholder_email_and_marks_the_source(self):
-        data = serialize_client(register_prospects(meta_payload())[0])
+        data = serialize_client(register_messages(meta_payload())[0].client)
         self.assertEqual(data["email"], "")
         self.assertEqual(data["source"], "whatsapp")
 
@@ -139,7 +249,7 @@ class SerializationTests(TestCase):
 
 class ProspectFormTests(TestCase):
     def setUp(self):
-        self.prospect = register_prospects(meta_payload())[0]
+        self.prospect = register_messages(meta_payload())[0].client
 
     def values(self, email: str) -> dict:
         data = serialize_client(self.prospect)
@@ -174,8 +284,8 @@ class ReceiveWebhookTests(TestCase):
         self.assertEqual(Client.objects.count(), 0)
 
     def test_valid_message_creates_a_prospect(self):
-        clients = self.receive(json.dumps(meta_payload()).encode())
-        self.assertEqual(len(clients), 1)
+        messages = self.receive(json.dumps(meta_payload()).encode())
+        self.assertEqual(len(messages), 1)
 
     def test_empty_secret_fails_closed(self):
         self.assert_rejected(
@@ -190,6 +300,6 @@ class ReceiveWebhookTests(TestCase):
 
     def test_simulated_message_goes_through_the_same_path(self):
         body = build_simulated_message()
-        client = self.receive(body)[0]
+        client = self.receive(body)[0].client
         self.assertTrue(client.whatsapp_id.startswith("59399"))
         self.assertEqual(len(client.whatsapp_id), 12)
