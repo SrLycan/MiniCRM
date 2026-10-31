@@ -56,6 +56,6 @@ Cada fase termina verificada antes de pasar a la siguiente.
 - [x] Revisión en navegador a 360, 768, 1024 y 1920 px en ambos temas
 - [x] Contraste, teclado, consola limpia y `prefers-reduced-motion`
 - [x] README completo y capturas en `docs/screenshots/`
-- [ ] Instalación desde cero siguiendo solo el README
-- [ ] Push y CI en verde
+- [x] Instalación desde cero siguiendo solo el README
+- [x] Push y CI en verde
 - [ ] Correo de entrega
