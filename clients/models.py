@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
@@ -20,6 +21,13 @@ def validate_phone(value: str) -> None:
         )
 
 
+def normalize_search_text(text: str) -> str:
+    """Quita acentos y mayúsculas, que SQLite no ignora al buscar texto en español."""
+    decomposed = unicodedata.normalize("NFKD", text)
+    without_accents = "".join(c for c in decomposed if not unicodedata.combining(c))
+    return without_accents.casefold()
+
+
 class Client(models.Model):
     class Status(models.TextChoices):
         PROSPECT = "prospect", "Prospecto"
@@ -33,6 +41,7 @@ class Client(models.Model):
     status = models.CharField(
         "estado", max_length=10, choices=Status.choices, default=Status.PROSPECT
     )
+    search_text = models.CharField(max_length=241, blank=True, editable=False)
     created_at = models.DateTimeField("creado", auto_now_add=True)
     updated_at = models.DateTimeField("actualizado", auto_now=True)
 
@@ -65,3 +74,7 @@ class Client(models.Model):
         duplicates = Client.objects.filter(email__iexact=self.email).exclude(pk=self.pk)
         if self.email and duplicates.exists():
             raise ValidationError({"email": "Ya existe un cliente con este correo."})
+
+    def save(self, *args, **kwargs) -> None:
+        self.search_text = normalize_search_text(f"{self.name} {self.company}")
+        super().save(*args, **kwargs)

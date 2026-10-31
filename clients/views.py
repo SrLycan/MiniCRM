@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.db.models.functions import TruncWeek
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils import timezone
@@ -12,7 +12,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from .forms import ClientForm
-from .models import Client
+from .models import Client, normalize_search_text
 from .serializers import serialize_client
 
 PAGE_SIZE = 10
@@ -24,7 +24,7 @@ DEFAULT_SORT = "-created_at"
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "clients/dashboard.html"
-    extra_context = {"active_page": "dashboard"}
+    extra_context = {"active_page": "dashboard", "statuses": Client.Status.choices}
 
 
 class ClientListView(LoginRequiredMixin, TemplateView):
@@ -78,7 +78,7 @@ class ClientCollectionApiView(ApiView):
 
         query = request.GET.get("q", "").strip()
         if query:
-            clients = clients.filter(Q(name__icontains=query) | Q(company__icontains=query))
+            clients = clients.filter(search_text__contains=normalize_search_text(query))
 
         status = request.GET.get("status", "")
         if status:

@@ -92,6 +92,12 @@ class ClientListTests(ApiTestCase):
         self.assertEqual(self.names(q="NOVA"), ["Luis Mena"])
         self.assertEqual(self.names(q="zzz"), [])
 
+    def test_search_ignores_accents_in_both_directions(self):
+        make_client("José Peña", company="Clínica Ñandú")
+        self.assertEqual(self.names(q="jose pena"), ["José Peña"])
+        self.assertEqual(self.names(q="CLÍNICA"), ["José Peña"])
+        self.assertEqual(self.names(q="clinica nandu"), ["José Peña"])
+
     def test_filter_by_status_combines_with_search(self):
         make_client("Ana Ruiz", status=Client.Status.CLIENT)
         make_client("Ana Mena", status=Client.Status.INACTIVE)
