@@ -14,6 +14,8 @@ vacante de Desarrollador/a de Software Junior en CEO Marketing.
 - Crear, editar y eliminar clientes en modales, sin recargar la página.
 - Búsqueda dinámica por nombre o empresa, sin distinguir mayúsculas ni acentos.
 - Filtro por estado, orden por columnas y paginación, conservados en la URL.
+- Tablero Kanban por estado: arrastrar con ratón, o selector con teclado y en móvil.
+- WhatsApp simulado: un webhook firmado convierte cada mensaje en un prospecto.
 - Validación inmediata en el navegador y validación definitiva en el backend.
 - Mensajes toast, esqueletos de carga y estados vacío y de error con reintento.
 - Modo oscuro y claro, diseño responsive de 360 a 1920 px.
@@ -86,16 +88,42 @@ docs/         Spec, plan, decisiones y capturas
 
 ## API
 
-Todas las rutas exigen sesión y responden 401 sin ella.
+Todas las rutas exigen sesión y responden 401 sin ella, salvo el webhook.
 
 | Método y ruta | Uso |
 |---|---|
-| `GET /api/clients/?q=&status=&sort=&page=` | Listar, buscar, filtrar, ordenar y paginar |
+| `GET /api/clients/?q=&status=&sort=&page=&page_size=` | Listar, buscar, filtrar, ordenar y paginar |
 | `POST /api/clients/` | Crear |
 | `GET /api/clients/<id>/` | Consultar |
 | `PUT /api/clients/<id>/` | Actualizar |
+| `PATCH /api/clients/<id>/` | Cambiar solo el estado |
 | `DELETE /api/clients/<id>/` | Eliminar |
 | `GET /api/clients/stats/` | Métricas del panel |
+| `POST /api/clients/simulate-whatsapp/` | Simular un mensaje entrante |
+| `POST /api/webhooks/whatsapp/` | Recibir mensajes firmados con `X-Hub-Signature-256` |
+
+## WhatsApp simulado
+
+El botón **Simular mensaje de WhatsApp** de la página de clientes crea un prospecto con un
+nombre y un número de ejemplo. El servidor arma un mensaje con el formato de Meta, lo firma
+con `WHATSAPP_APP_SECRET` y lo procesa por el mismo código del webhook.
+
+No hay conexión con Meta ni se envían mensajes. Si un número vuelve a escribir no se crea
+otro prospecto. WhatsApp no entrega correo, así que el prospecto aparece con "Sin dato"
+hasta que alguien lo edite y registre uno real.
+
+Para probar el webhook directamente, con la aplicación corriendo y el secreto de
+`.env.example`:
+
+```bash
+BODY='{"entry":[{"changes":[{"value":{"contacts":[{"profile":{"name":"Ana Ruiz"},"wa_id":"593991234567"}],"messages":[{"from":"593991234567"}]}}]}]}'
+SECRET=solo-para-demo-local-reemplazar-en-cualquier-otro-entorno
+SIGNATURE=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -r | cut -d' ' -f1)
+curl -i http://localhost:8000/api/webhooks/whatsapp/ \
+  -H "Content-Type: application/json" \
+  -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+  -d "$BODY"
+```
 
 ## Decisiones técnicas
 
@@ -108,7 +136,8 @@ Todas las rutas exigen sesión y responden 401 sin ella.
 - **Seguridad básica.** CSRF en toda escritura, secretos por variables de entorno, datos
   pintados con `textContent` para evitar XSS y contenedor sin usuario root.
 
-El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md) y
+El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md),
+[docs/SPEC-MEJORAS.md](docs/SPEC-MEJORAS.md), [docs/PLAN-MEJORAS.md](docs/PLAN-MEJORAS.md) y
 [docs/DECISIONES.md](docs/DECISIONES.md).
 
 ## Limitaciones conocidas
@@ -116,6 +145,9 @@ El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md) y
 - Las credenciales de `.env.example` son solo para esta demo. Fuera de ella, cambia la
   clave secreta y la contraseña, y pon `DEMO_LOGIN_HINT=false`.
 - El login de Django Admin no tiene el bloqueo por intentos de la aplicación.
+- Un mensaje de WhatsApp de alguien ya registrado a mano crea un prospecto aparte, porque
+  se identifica por `whatsapp_id` y no compara teléfonos escritos en otro formato.
+- En el tablero, arrastrar funciona con ratón; en pantallas táctiles se usa el selector.
 - Las fuentes Sora y Outfit se cargan desde Google Fonts; sin internet se usa una fuente
   del sistema.
 

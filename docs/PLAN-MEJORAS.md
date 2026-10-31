@@ -15,14 +15,14 @@ Mismo flujo que `PLAN.md`: una rama `feature/*` por fase, fusionada a `develop` 
 
 ## Fase 2: WhatsApp simulado (`feature/whatsapp-simulado`)
 
-- [ ] Campo `whatsapp_id`, migración y correo reservado
-- [ ] Firma y lectura del mensaje, con pruebas
-- [ ] Webhook con pruebas de firma, idempotencia y secreto ausente
-- [ ] Simulación por API con pruebas
-- [ ] Insignia de origen y botón en la interfaz
-- [ ] Verificación en navegador
+- [x] Campo `whatsapp_id`, migración y correo reservado
+- [x] Firma y lectura del mensaje, con pruebas
+- [x] Webhook con pruebas de firma, idempotencia y secreto ausente
+- [x] Simulación por API con pruebas
+- [x] Insignia de origen y botón en la interfaz
+- [x] Verificación en navegador
 
 ## Fase 3: Cierre
 
-- [ ] `README.md` y `DECISIONES.md`
+- [x] `README.md` y `DECISIONES.md`
 - [ ] Pruebas completas y CI en verde

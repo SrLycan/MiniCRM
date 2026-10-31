@@ -38,13 +38,13 @@ desplazamiento horizontal de 360 a 1920 px.
 
 ### Criterios de aceptación
 
-- [ ] La vista se conserva al recargar y al compartir la URL.
-- [ ] Arrastrar una tarjeta cambia su estado y persiste al recargar.
-- [ ] El selector cambia el estado solo con teclado.
-- [ ] Un error del servidor devuelve la tarjeta a su columna y lo informa.
-- [ ] Editar y eliminar funcionan desde el tablero.
-- [ ] La búsqueda filtra las tres columnas.
-- [ ] Los estados de carga, vacío y error se ven bien en el tablero.
+- [x] La vista se conserva al recargar y al compartir la URL.
+- [x] Arrastrar una tarjeta cambia su estado y persiste al recargar.
+- [x] El selector cambia el estado solo con teclado.
+- [x] Un error del servidor devuelve la tarjeta a su columna y lo informa.
+- [x] Editar y eliminar funcionan desde el tablero.
+- [x] La búsqueda filtra las tres columnas.
+- [x] Los estados de carga, vacío y error se ven bien en el tablero.
 
 ## WhatsApp simulado
 
@@ -87,10 +87,10 @@ simulación y un toast confirma el prospecto creado.
 
 ### Criterios de aceptación
 
-- [ ] Una firma válida crea el prospecto con su insignia de origen.
-- [ ] Una firma incorrecta o ausente responde 403 y no crea nada.
-- [ ] El mismo número repetido no crea un duplicado.
-- [ ] Sin secreto configurado el webhook falla cerrado con 503.
-- [ ] Editar un prospecto de WhatsApp exige un correo real y conserva su origen.
-- [ ] Mover un prospecto de WhatsApp en el tablero funciona aunque no tenga correo real.
-- [ ] El botón crea un prospecto visible sin recargar, en ambas vistas.
+- [x] Una firma válida crea el prospecto con su insignia de origen.
+- [x] Una firma incorrecta o ausente responde 403 y no crea nada.
+- [x] El mismo número repetido no crea un duplicado.
+- [x] Sin secreto configurado el webhook falla cerrado con 503.
+- [x] Editar un prospecto de WhatsApp exige un correo real y conserva su origen.
+- [x] Mover un prospecto de WhatsApp en el tablero funciona aunque no tenga correo real.
+- [x] El botón crea un prospecto visible sin recargar, en ambas vistas.

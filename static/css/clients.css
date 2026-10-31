@@ -170,9 +170,18 @@
   gap: var(--space-3);
 }
 
+.client-identity__details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--space-2);
+  min-width: 0;
+}
+
 .client-identity__name {
   color: var(--text);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .client-actions {

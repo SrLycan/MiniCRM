@@ -136,12 +136,6 @@
   animation: none;
 }
 
-.board-card__name {
-  color: var(--text);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
 .board-card__company {
   color: var(--text-soft);
   font-size: .92rem;

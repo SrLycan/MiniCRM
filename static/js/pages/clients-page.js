@@ -1,5 +1,5 @@
 import { ApiError, clientsApi } from "../core/api.js";
-import { createElement } from "../core/dom.js";
+import { createElement, setButtonLoading } from "../core/dom.js";
 import { clientCountLabel, debounce } from "../core/utils.js";
 import {
   boardStatuses,
@@ -9,7 +9,7 @@ import {
   renderBoardSkeleton,
 } from "../features/client-board.js";
 import { openDeleteDialog } from "../features/client-delete.js";
-import { onClientsChanged } from "../features/client-events.js";
+import { notifyClientsChanged, onClientsChanged } from "../features/client-events.js";
 import { openClientForm } from "../features/client-form.js";
 import { renderRows, renderSkeleton } from "../features/client-table.js";
 import { showToast } from "../ui/toast.js";
@@ -22,6 +22,7 @@ const table = document.querySelector("#client-table");
 const rows = document.querySelector("#client-rows");
 const board = document.querySelector("#client-board");
 const viewButtons = [...document.querySelectorAll(".view-switch__button")];
+const simulateButton = document.querySelector("#simulate-whatsapp");
 const stateBox = document.querySelector("#client-state");
 const countLabel = document.querySelector("#client-count");
 const pagination = document.querySelector("#client-pagination");
@@ -250,6 +251,8 @@ viewButtons.forEach((button) => {
   });
 });
 
+simulateButton.addEventListener("click", simulateWhatsAppMessage);
+
 searchInput.addEventListener("input", () => searchClients(searchInput.value));
 
 statusChips.forEach((chip) => {
@@ -291,6 +294,19 @@ async function moveClient(clientId, status) {
     if (error.code === "CLIENT_NOT_FOUND") loadClients({ showSkeleton: false });
   } finally {
     movingClientIds.delete(clientId);
+  }
+}
+
+async function simulateWhatsAppMessage() {
+  setButtonLoading(simulateButton, true);
+  try {
+    const client = await clientsApi.simulateWhatsApp();
+    showToast(`Simulación: ${client.name} escribió por WhatsApp y quedó como prospecto.`);
+    notifyClientsChanged();
+  } catch (error) {
+    showToast(error.message, "error");
+  } finally {
+    setButtonLoading(simulateButton, false);
   }
 }
 

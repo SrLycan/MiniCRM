@@ -72,4 +72,7 @@ export const clientsApi = {
   remove(id) {
     return request(`${CLIENTS_URL}${id}/`, { method: "DELETE" });
   },
+  simulateWhatsApp() {
+    return request(`${CLIENTS_URL}simulate-whatsapp/`, { method: "POST" });
+  },
 };

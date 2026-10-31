@@ -112,6 +112,11 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Sin secreto el webhook responde 503: nunca acepta mensajes sin verificar su firma.
+WHATSAPP_APP_SECRET = os.environ.get("WHATSAPP_APP_SECRET", "")
+if not WHATSAPP_APP_SECRET and DEBUG:
+    WHATSAPP_APP_SECRET = "secreto-solo-para-desarrollo"
+
 DEMO_USERNAME = os.environ.get("DEMO_USERNAME", "")
 DEMO_PASSWORD = os.environ.get("DEMO_PASSWORD", "")
 DEMO_LOGIN_HINT = env_bool("DEMO_LOGIN_HINT")

@@ -268,6 +268,7 @@
 .badge--prospect { background: var(--prospect-soft); color: var(--prospect); }
 .badge--client { background: var(--client-soft); color: var(--client); }
 .badge--inactive { background: var(--inactive-soft); color: var(--inactive); }
+.badge--source { background: var(--accent-soft); color: var(--accent-text); }
 
 .avatar {
   flex: none;
