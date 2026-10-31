@@ -14,12 +14,12 @@ vacante de Desarrollador/a de Software Junior en CEO Marketing.
 - Crear, editar y eliminar clientes en modales, sin recargar la página.
 - Búsqueda dinámica por nombre o empresa, sin distinguir mayúsculas ni acentos.
 - Filtro por estado, orden por columnas y paginación, conservados en la URL.
-- Tablero Kanban por estado: arrastrar con ratón, o selector con teclado y en móvil.
+- Tablero Kanban en su propio apartado: arrastrar con ratón, o selector con teclado y en móvil.
 - Eliminar con confirmación y opción de deshacer durante 6 segundos.
-- WhatsApp simulado: un webhook firmado convierte cada mensaje en un prospecto.
+- Chat de WhatsApp simulado: conversaciones por cliente, respuestas y webhook firmado.
 - Validación inmediata en el navegador y validación definitiva en el backend.
 - Mensajes toast, esqueletos de carga y estados vacío y de error con reintento.
-- Modo oscuro y claro, diseño responsive de 360 a 1920 px.
+- Modo claro por defecto y modo oscuro opcional, diseño responsive de 360 a 1920 px.
 - Administración de clientes desde Django Admin.
 
 ## Requisitos
@@ -100,18 +100,29 @@ Todas las rutas exigen sesión y responden 401 sin ella, salvo el webhook.
 | `PATCH /api/clients/<id>/` | Cambiar solo el estado |
 | `DELETE /api/clients/<id>/` | Eliminar |
 | `GET /api/clients/stats/` | Métricas del panel |
-| `POST /api/clients/simulate-whatsapp/` | Simular un mensaje entrante |
+| `POST /api/clients/simulate-whatsapp/` | Simular un cliente nuevo |
+| `GET /api/conversations/` | Listar conversaciones |
+| `GET /api/conversations/<id>/` | Consultar un chat |
+| `POST /api/conversations/<id>/messages/` | Responder en el chat |
+| `POST /api/conversations/<id>/simulate-reply/` | Simular una respuesta del cliente |
 | `POST /api/webhooks/whatsapp/` | Recibir mensajes firmados con `X-Hub-Signature-256` |
 
 ## WhatsApp simulado
 
-El botón **Simular mensaje de WhatsApp** de la página de clientes crea un prospecto con un
-nombre y un número de ejemplo. El servidor arma un mensaje con el formato de Meta, lo firma
-con `WHATSAPP_APP_SECRET` y lo procesa por el mismo código del webhook.
+El apartado **WhatsApp** del menú muestra las conversaciones y permite responder. Como no hay
+conexión con Meta, los mensajes se guardan en el CRM pero no llegan a un teléfono real, y la
+pantalla lo avisa. Para probarlo:
 
-No hay conexión con Meta ni se envían mensajes. Si un número vuelve a escribir no se crea
-otro prospecto. WhatsApp no entrega correo, así que el prospecto aparece con "Sin dato"
-hasta que alguien lo edite y registre uno real.
+1. **Simular cliente nuevo** crea un prospecto con su primer mensaje y abre su chat.
+2. Escribe una respuesta y envíala.
+3. **Simular respuesta del cliente** hace que te conteste.
+
+También puedes abrir el chat de cualquier cliente con teléfono desde Clientes o Tablero.
+
+Cada mensaje simulado se firma con `WHATSAPP_APP_SECRET` y entra por el mismo código del
+webhook. Si el número ya pertenece a un cliente, el mensaje se le asocia y conserva sus
+datos, aunque el teléfono esté escrito en otro formato. Si es nuevo, WhatsApp no entrega
+correo ni empresa, así que aparecen vacíos hasta que alguien los complete.
 
 Para probar el webhook directamente, con la aplicación corriendo y el secreto de
 `.env.example`:
@@ -134,8 +145,10 @@ curl -i http://localhost:8000/api/webhooks/whatsapp/ \
   la tabla, los formularios y los modales usan superficies sólidas con contraste AA.
 - **Reglas críticas en la base de datos.** El correo único y los estados válidos también
   son restricciones de SQLite, y `ClientForm` traduce los errores a mensajes claros.
-- **Seguridad básica.** CSRF en toda escritura, secretos por variables de entorno, datos
-  pintados con `textContent` para evitar XSS y contenedor sin usuario root.
+- **Seguridad.** CSRF en toda escritura, secretos por variables de entorno, datos pintados
+  con `textContent` para evitar XSS, política CSP sin scripts en línea, límites de longitud
+  y de tamaño, bloqueo del login por usuario e IP, también en Admin, y contenedor sin root.
+  Para publicar la app, cambia todos los valores de `.env.example` y activa `DJANGO_HTTPS`.
 
 El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md),
 [docs/SPEC-MEJORAS.md](docs/SPEC-MEJORAS.md), [docs/PLAN-MEJORAS.md](docs/PLAN-MEJORAS.md) y
@@ -145,9 +158,8 @@ El detalle está en [docs/SPEC.md](docs/SPEC.md), [docs/PLAN.md](docs/PLAN.md),
 
 - Las credenciales de `.env.example` son solo para esta demo. Fuera de ella, cambia la
   clave secreta y la contraseña, y pon `DEMO_LOGIN_HINT=false`.
-- El login de Django Admin no tiene el bloqueo por intentos de la aplicación.
-- Un mensaje de WhatsApp de alguien ya registrado a mano crea un prospecto aparte, porque
-  se identifica por `whatsapp_id` y no compara teléfonos escritos en otro formato.
+- El chat se actualiza con cada acción: un mensaje que entra por el webhook desde fuera se
+  ve al recargar la página.
 - En el tablero, arrastrar funciona con ratón; en pantallas táctiles se usa el selector.
 - Las fuentes Sora y Outfit se cargan desde Google Fonts; sin internet se usa una fuente
   del sistema.

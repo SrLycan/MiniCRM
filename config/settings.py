@@ -42,6 +42,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "config.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -91,10 +92,25 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 # Bloqueo de login: intentos fallidos permitidos y duración del bloqueo.
 LOGIN_MAX_ATTEMPTS = 5
+LOGIN_MAX_ATTEMPTS_PER_IP = 20
 LOGIN_LOCKOUT_SECONDS = 300
+
+SESSION_COOKIE_AGE = 8 * 60 * 60
+
+# La API y el login solo reciben textos cortos, así que no necesitan el límite de 2,5 MB.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 256 * 1024
 
 # El token viaja en una etiqueta meta, así que JavaScript no necesita leer la cookie.
 CSRF_COOKIE_HTTPONLY = True
+
+# Actívalo solo detrás de un proxy con HTTPS: Docker en local usa HTTP y no enviaría las cookies.
+USE_HTTPS = env_bool("DJANGO_HTTPS")
+SESSION_COOKIE_SECURE = USE_HTTPS
+CSRF_COOKIE_SECURE = USE_HTTPS
+SECURE_SSL_REDIRECT = USE_HTTPS
+SECURE_HSTS_SECONDS = 31_536_000 if USE_HTTPS else 0
+if USE_HTTPS:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 LANGUAGE_CODE = "es"
 TIME_ZONE = "America/Guayaquil"

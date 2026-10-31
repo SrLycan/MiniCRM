@@ -65,6 +65,13 @@ export function formatDate(isoDate) {
   return new Intl.DateTimeFormat("es-EC", { day: "numeric", month: "short" }).format(new Date(isoDate));
 }
 
+/** Hora si el mensaje es de hoy; si no, el día y el mes. */
+export function formatMessageTime(isoDate, now = new Date()) {
+  const date = new Date(isoDate);
+  if (date.toDateString() !== now.toDateString()) return formatDate(isoDate);
+  return new Intl.DateTimeFormat("es-EC", { hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
 export function clientCountLabel(total) {
   return total === 1 ? "1 cliente" : `${total} clientes`;
 }

@@ -1,6 +1,6 @@
 import json
 
-from .models import Client
+from .models import Client, WhatsAppMessage
 
 
 def parse_json_object(raw_body: bytes) -> dict | None:
@@ -24,4 +24,13 @@ def serialize_client(client: Client) -> dict:
         "source": "whatsapp" if client.whatsapp_id else "manual",
         "created_at": client.created_at.isoformat(),
         "updated_at": client.updated_at.isoformat(),
+    }
+
+
+def serialize_message(message: WhatsAppMessage) -> dict:
+    return {
+        "id": message.pk,
+        "direction": message.direction,
+        "body": message.body,
+        "created_at": message.created_at.isoformat(),
     }

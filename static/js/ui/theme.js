@@ -12,7 +12,7 @@ export function initThemeToggle() {
 
   toggle.addEventListener("click", () => {
     const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    localStorage.setItem(STORAGE_KEY, nextTheme);
+    sessionStorage.setItem(STORAGE_KEY, nextTheme);
     applyTheme(nextTheme, toggle);
   });
 }

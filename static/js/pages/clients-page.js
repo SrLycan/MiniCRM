@@ -1,28 +1,16 @@
 import { ApiError, clientsApi } from "../core/api.js";
-import { createElement, setButtonLoading } from "../core/dom.js";
+import { createElement } from "../core/dom.js";
 import { clientCountLabel, debounce } from "../core/utils.js";
-import {
-  boardStatuses,
-  initBoardDragging,
-  moveCard,
-  renderBoard,
-  renderBoardSkeleton,
-} from "../features/client-board.js";
-import { isPendingDeletion, openDeleteDialog } from "../features/client-delete.js";
-import { notifyClientsChanged, onClientsChanged } from "../features/client-events.js";
+import { openDeleteDialog, withoutPendingDeletions } from "../features/client-delete.js";
+import { onClientsChanged } from "../features/client-events.js";
 import { openClientForm } from "../features/client-form.js";
 import { renderRows, renderSkeleton } from "../features/client-table.js";
-import { showToast } from "../ui/toast.js";
+import { renderListState } from "../features/list-state.js";
 
 const SEARCH_DELAY_MS = 250;
-const BOARD_COLUMN_SIZE = 50;
 
-const toolbar = document.querySelector("#client-toolbar");
 const table = document.querySelector("#client-table");
 const rows = document.querySelector("#client-rows");
-const board = document.querySelector("#client-board");
-const viewButtons = [...document.querySelectorAll(".view-switch__button")];
-const simulateButton = document.querySelector("#simulate-whatsapp");
 const stateBox = document.querySelector("#client-state");
 const countLabel = document.querySelector("#client-count");
 const pagination = document.querySelector("#client-pagination");
@@ -33,7 +21,6 @@ const sortableHeaders = [...document.querySelectorAll("th[data-sort]")];
 
 const urlParams = new URLSearchParams(location.search);
 const state = {
-  view: urlParams.get("view") === "board" ? "board" : "table",
   q: urlParams.get("q") ?? "",
   status: urlParams.get("status") ?? "",
   sort: urlParams.get("sort") ?? "",
@@ -42,7 +29,6 @@ const state = {
 
 let currentClients = [];
 let activeRequest = null;
-const movingClientIds = new Set();
 
 function queryParams() {
   const params = {};
@@ -53,21 +39,12 @@ function queryParams() {
   return params;
 }
 
-function isBoardView() {
-  return state.view === "board";
-}
-
 function syncUrl() {
-  const params = { ...(isBoardView() && { view: "board" }), ...queryParams() };
-  const query = new URLSearchParams(params).toString();
+  const query = new URLSearchParams(queryParams()).toString();
   history.replaceState(null, "", query ? `?${query}` : location.pathname);
 }
 
 function syncFilters() {
-  toolbar.dataset.view = state.view;
-  viewButtons.forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.view === state.view));
-  });
   searchInput.value = state.q;
   sortSelect.value = state.sort;
   statusChips.forEach((chip) => {
@@ -82,27 +59,17 @@ function syncFilters() {
 }
 
 function hasActiveFilters() {
-  return Boolean(state.q || (state.status && !isBoardView()));
+  return Boolean(state.q || state.status);
 }
 
-function showState({ title, text, actionLabel, onAction }) {
-  const button = createElement("button", { class: "button button--ghost", type: "button" }, actionLabel);
-  button.addEventListener("click", onAction);
-  stateBox.replaceChildren(
-    createElement("div", { class: "table-state__orbit", "aria-hidden": "true" }),
-    createElement("h2", { class: "table-state__title" }, title),
-    createElement("p", {}, text),
-    button,
-  );
-  stateBox.hidden = false;
+function showState(content) {
+  renderListState(stateBox, content);
   table.hidden = true;
-  board.hidden = true;
 }
 
 function hideState() {
   stateBox.hidden = true;
-  table.hidden = isBoardView();
-  board.hidden = !isBoardView();
+  table.hidden = false;
 }
 
 function clearFilters() {
@@ -159,12 +126,6 @@ function renderPagination({ page, pages }) {
   );
 }
 
-/** Un cliente en espera de Deshacer sigue en el servidor, pero ya no se muestra. */
-function withoutPendingDeletions(results, total) {
-  const clients = results.filter(({ id }) => !isPendingDeletion(id));
-  return { clients, total: total - (results.length - clients.length) };
-}
-
 async function loadTable(signal) {
   const { results, pagination: pageInfo } = await clientsApi.list(queryParams(), signal);
   const { clients, total } = withoutPendingDeletions(results, pageInfo.total);
@@ -178,25 +139,6 @@ async function loadTable(signal) {
   return total;
 }
 
-async function loadColumn(status, signal) {
-  const params = { status, page_size: BOARD_COLUMN_SIZE, ...(state.q && { q: state.q }) };
-  const { results, pagination: pageInfo } = await clientsApi.list(params, signal);
-  return [status, withoutPendingDeletions(results, pageInfo.total)];
-}
-
-async function loadBoard(signal) {
-  const statuses = boardStatuses(board).map(({ value }) => value);
-  const columns = Object.fromEntries(
-    await Promise.all(statuses.map((status) => loadColumn(status, signal))),
-  );
-  currentClients = Object.values(columns).flatMap(({ clients }) => clients);
-
-  hideState();
-  renderBoard(board, columns);
-  pagination.replaceChildren();
-  return Object.values(columns).reduce((sum, { total }) => sum + total, 0);
-}
-
 async function loadClients({ showSkeleton = true } = {}) {
   activeRequest?.abort();
   const request = new AbortController();
@@ -204,14 +146,12 @@ async function loadClients({ showSkeleton = true } = {}) {
 
   if (showSkeleton) {
     hideState();
-    if (isBoardView()) renderBoardSkeleton(board);
-    else renderSkeleton(rows);
+    renderSkeleton(rows);
   }
   table.setAttribute("aria-busy", "true");
 
   try {
-    const load = isBoardView() ? loadBoard : loadTable;
-    const total = await load(request.signal);
+    const total = await loadTable(request.signal);
     countLabel.textContent = clientCountLabel(total);
     if (total === 0) renderEmptyState();
   } catch (error) {
@@ -250,16 +190,6 @@ const searchClients = debounce((value) => {
   applyChanges();
 }, SEARCH_DELAY_MS);
 
-viewButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    if (button.dataset.view === state.view) return;
-    state.view = button.dataset.view;
-    applyChanges();
-  });
-});
-
-simulateButton.addEventListener("click", simulateWhatsAppMessage);
-
 searchInput.addEventListener("input", () => searchClients(searchInput.value));
 
 statusChips.forEach((chip) => {
@@ -280,43 +210,6 @@ sortableHeaders.forEach((header) => {
   header.querySelector("button").addEventListener("click", () => toggleSort(header.dataset.sort));
 });
 
-/** Mueve la tarjeta al instante y la devuelve a su columna si el servidor lo rechaza. */
-async function moveClient(clientId, status) {
-  const client = currentClients.find(({ id }) => id === clientId);
-  if (!client || client.status === status) return;
-
-  // Un cambio pendiente manda: se descarta el segundo para no cruzar respuestas.
-  if (movingClientIds.has(clientId)) return;
-
-  movingClientIds.add(clientId);
-  const previousStatus = client.status;
-  moveCard(board, clientId, status);
-
-  try {
-    Object.assign(client, await clientsApi.updateStatus(clientId, status));
-    showToast(`${client.name} pasó a ${client.status_label}.`);
-  } catch (error) {
-    moveCard(board, clientId, previousStatus);
-    showToast(error.message, "error");
-    if (error.code === "CLIENT_NOT_FOUND") loadClients({ showSkeleton: false });
-  } finally {
-    movingClientIds.delete(clientId);
-  }
-}
-
-async function simulateWhatsAppMessage() {
-  setButtonLoading(simulateButton, true);
-  try {
-    const client = await clientsApi.simulateWhatsApp();
-    showToast(`Simulación: ${client.name} escribió por WhatsApp y quedó como prospecto.`);
-    notifyClientsChanged();
-  } catch (error) {
-    showToast(error.message, "error");
-  } finally {
-    setButtonLoading(simulateButton, false);
-  }
-}
-
 function handleClientAction(event) {
   const actionButton = event.target.closest("[data-action]");
   if (!actionButton) return;
@@ -328,18 +221,6 @@ function handleClientAction(event) {
 }
 
 rows.addEventListener("click", handleClientAction);
-board.addEventListener("click", handleClientAction);
-
-board.addEventListener("change", ({ target }) => {
-  if (!target.matches("[data-status-select]")) return;
-
-  const clientId = Number(target.closest("[data-client-id]").dataset.clientId);
-  const { status } = currentClients.find(({ id }) => id === clientId);
-  if (movingClientIds.has(clientId)) target.value = status;
-  else moveClient(clientId, target.value);
-});
-
-initBoardDragging(board, moveClient);
 
 onClientsChanged(() => loadClients({ showSkeleton: false }));
 

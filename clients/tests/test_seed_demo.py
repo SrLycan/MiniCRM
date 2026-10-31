@@ -1,6 +1,6 @@
 import io
 
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 
@@ -26,3 +26,14 @@ class SeedDemoTests(TestCase):
         with self.assertRaises(CommandError):
             call_command("seed_demo", stdout=io.StringIO())
 
+
+
+class DemoUserPermissionsTests(TestCase):
+    @override_settings(DEMO_USERNAME="demo", DEMO_PASSWORD="clave-de-prueba")
+    def test_demo_user_is_not_a_superuser(self):
+        call_command("seed_demo", stdout=io.StringIO())
+        user = get_user_model().objects.get(username="demo")
+        self.assertTrue(user.is_staff)
+        self.assertFalse(user.is_superuser)
+        self.assertTrue(user.has_perm("clients.change_client"))
+        self.assertFalse(user.has_perm("auth.change_user"))

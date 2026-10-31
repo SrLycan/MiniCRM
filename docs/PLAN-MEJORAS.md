@@ -33,3 +33,18 @@ Mismo flujo que `PLAN.md`: una rama `feature/*` por fase, fusionada a `develop` 
 - [x] Toast con acción
 - [x] Eliminación aplazada, Deshacer y envío al salir
 - [x] Verificación en navegador
+
+## Fase 5: Seguridad (`feature/seguridad`)
+
+- [x] Auditoría de archivos expuestos, cabeceras, historia de git, imagen y dependencias
+- [x] Límites del login, bloqueo por IP y bloqueo en Admin
+- [x] CSP sin scripts en línea, sesiones de 8 horas y límite de tamaño
+- [x] Usuario demo sin permisos de superusuario
+
+## Fase 6: Navegación y chat (`feature/tablero-propio`, `feature/chat-whatsapp`)
+
+- [x] Tablero como página propia debajo de Clientes
+- [x] Mensajes guardados y asociación por teléfono al cliente existente
+- [x] API de conversaciones con pruebas
+- [x] Pantalla de chat con respuesta y simulación
+- [x] Verificación en navegador: desktop y 360 px
