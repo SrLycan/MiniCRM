@@ -8,6 +8,39 @@ export function debounce(callback, waitMs) {
   };
 }
 
+/**
+ * Guarda acciones que se ejecutan tras una espera, salvo que se cancelen antes.
+ * `flush` las ejecuta de inmediato con las opciones recibidas, para no perderlas al salir.
+ */
+export function createDeferredActions(delayMs) {
+  const pending = new Map();
+
+  function take(id) {
+    const entry = pending.get(id);
+    if (!entry) return null;
+    clearTimeout(entry.timeoutId);
+    pending.delete(id);
+    return entry.action;
+  }
+
+  return {
+    schedule(id, action) {
+      take(id);
+      const timeoutId = setTimeout(() => take(id)?.(), delayMs);
+      pending.set(id, { action, timeoutId });
+    },
+    cancel(id) {
+      return take(id) !== null;
+    },
+    has(id) {
+      return pending.has(id);
+    },
+    flush(options) {
+      for (const id of [...pending.keys()]) take(id)(options);
+    },
+  };
+}
+
 export function initials(name) {
   const words = name.trim().split(/\s+/).filter(Boolean);
   const first = words[0]?.[0] ?? "?";
