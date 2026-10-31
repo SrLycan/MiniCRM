@@ -36,6 +36,19 @@ export function createStatusBadge(client) {
   return createElement("span", { class: `badge badge--${client.status}` }, client.status_label);
 }
 
+/** Avatar, nombre y, si vino por WhatsApp, la insignia de origen. */
+export function createClientIdentity(client) {
+  const details = createElement(
+    "div",
+    { class: "client-identity__details" },
+    createElement("span", { class: "client-identity__name" }, client.name),
+  );
+  if (client.source === "whatsapp") {
+    details.append(createElement("span", { class: "badge badge--source" }, "WhatsApp"));
+  }
+  return createElement("div", { class: "client-identity" }, createAvatar(client.name), details);
+}
+
 export function setButtonLoading(button, isLoading) {
   button.disabled = isLoading;
   button.classList.toggle("is-loading", isLoading);

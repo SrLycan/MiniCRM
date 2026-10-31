@@ -1,4 +1,4 @@
-import { createAvatar, createElement } from "../core/dom.js";
+import { createClientIdentity, createElement } from "../core/dom.js";
 import { boardColumnNote } from "../core/utils.js";
 import { createActionButton } from "./client-table.js";
 
@@ -37,13 +37,7 @@ function createCard(client, index, statuses) {
     "data-client-id": client.id,
   });
 
-  const identity = createElement(
-    "div",
-    { class: "client-identity" },
-    createAvatar(client.name),
-    createElement("span", { class: "board-card__name" }, client.name),
-  );
-  card.append(identity);
+  card.append(createClientIdentity(client));
 
   if (client.company) {
     card.append(createElement("p", { class: "board-card__company" }, client.company));
