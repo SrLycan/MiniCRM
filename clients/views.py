@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.db.models import Count
+from django.db.models import Count, Max, OuterRef, Subquery
 from django.db.models.functions import TruncWeek
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils import timezone
@@ -13,14 +13,23 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from .forms import ClientForm, ClientStatusForm
-from .models import Client, normalize_search_text
-from .serializers import parse_json_object, serialize_client
-from .whatsapp import WebhookRejected, build_simulated_message, receive_webhook, sign
+from .forms import ClientForm, ClientStatusForm, WhatsAppReplyForm
+from .models import Client, WhatsAppMessage, normalize_search_text
+from .serializers import parse_json_object, serialize_client, serialize_message
+from .whatsapp import (
+    WebhookRejected,
+    build_simulated_message,
+    build_simulated_reply,
+    receive_webhook,
+    sign,
+    whatsapp_number_of,
+)
 
 PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
 SEARCH_MAX_LENGTH = 100
+MAX_CONVERSATIONS = 100
+MAX_CHAT_MESSAGES = 200
 STATS_WEEKS = 6
 RECENT_CLIENTS = 5
 SORTABLE_FIELDS = {"name", "company", "email", "status", "created_at"}
@@ -40,6 +49,11 @@ class ClientListView(LoginRequiredMixin, TemplateView):
 class BoardView(LoginRequiredMixin, TemplateView):
     template_name = "clients/board.html"
     extra_context = {"active_page": "board", "statuses": Client.Status.choices}
+
+
+class WhatsAppView(LoginRequiredMixin, TemplateView):
+    template_name = "clients/whatsapp.html"
+    extra_context = {"active_page": "whatsapp", "statuses": Client.Status.choices}
 
 
 def error_response(code: str, message: str, status: int, errors: dict | None = None) -> JsonResponse:
@@ -121,12 +135,16 @@ class ClientCollectionApiView(ApiView):
         return save_client_form(ClientForm(data), success_status=201)
 
 
-class ClientDetailApiView(ApiView):
+class ClientScopedApiView(ApiView):
+    """Base de las rutas de un cliente: responde 404 si ya no existe."""
+
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         if request.user.is_authenticated and not Client.objects.filter(pk=kwargs["pk"]).exists():
             return error_response("CLIENT_NOT_FOUND", "El cliente ya no existe.", 404)
         return super().dispatch(request, *args, **kwargs)
 
+
+class ClientDetailApiView(ClientScopedApiView):
     def get(self, request: HttpRequest, pk: int) -> JsonResponse:
         return JsonResponse(serialize_client(Client.objects.get(pk=pk)))
 
@@ -165,16 +183,97 @@ class WhatsAppWebhookView(View):
         return JsonResponse({"status": "ok"})
 
 
+def receive_simulated_message(body: bytes) -> list[WhatsAppMessage]:
+    """Firma aquí el mensaje para que el secreto nunca llegue al navegador."""
+    secret = settings.WHATSAPP_APP_SECRET
+    return receive_webhook(body, sign(body, secret), secret)
+
+
 class WhatsAppSimulationApiView(ApiView):
     def post(self, request: HttpRequest) -> JsonResponse:
-        """Firma aquí el mensaje para que el secreto nunca llegue al navegador."""
-        secret = settings.WHATSAPP_APP_SECRET
-        body = build_simulated_message()
         try:
-            client = receive_webhook(body, sign(body, secret), secret)[0]
+            message = receive_simulated_message(build_simulated_message())[0]
         except WebhookRejected as rejection:
             return error_response(rejection.code, rejection.message, rejection.status)
-        return JsonResponse(serialize_client(client), status=201)
+        return JsonResponse(serialize_client(message.client), status=201)
+
+
+class ConversationListApiView(ApiView):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        latest = WhatsAppMessage.objects.filter(client=OuterRef("pk")).order_by("-created_at", "-id")
+        clients = (
+            Client.objects.filter(messages__isnull=False)
+            .annotate(
+                last_message_at=Max("messages__created_at"),
+                last_message_body=Subquery(latest.values("body")[:1]),
+                last_message_direction=Subquery(latest.values("direction")[:1]),
+            )
+            .order_by("-last_message_at")[:MAX_CONVERSATIONS]
+        )
+        return JsonResponse(
+            {
+                "results": [
+                    {
+                        "client": serialize_client(client),
+                        "last_message": {
+                            "body": client.last_message_body,
+                            "direction": client.last_message_direction,
+                            "created_at": client.last_message_at.isoformat(),
+                        },
+                    }
+                    for client in clients
+                ]
+            }
+        )
+
+
+class ConversationDetailApiView(ClientScopedApiView):
+    def get(self, request: HttpRequest, pk: int) -> JsonResponse:
+        client = Client.objects.get(pk=pk)
+        latest = client.messages.order_by("-created_at", "-id")[:MAX_CHAT_MESSAGES]
+        return JsonResponse(
+            {
+                "client": serialize_client(client),
+                "can_chat": bool(whatsapp_number_of(client)),
+                "messages": [serialize_message(message) for message in reversed(latest)],
+            }
+        )
+
+
+def chat_unavailable_response() -> JsonResponse:
+    message = "Este cliente necesita un teléfono válido para chatear."
+    return error_response("PHONE_REQUIRED", message, 400)
+
+
+class ConversationMessagesApiView(ClientScopedApiView):
+    def post(self, request: HttpRequest, pk: int) -> JsonResponse:
+        client = Client.objects.get(pk=pk)
+        if not whatsapp_number_of(client):
+            return chat_unavailable_response()
+
+        data = parse_json_object(request.body)
+        if data is None:
+            return error_response("INVALID_JSON", "La solicitud no es válida.", 400)
+        form = WhatsAppReplyForm(data)
+        if not form.is_valid():
+            return validation_error_response(form.errors)
+
+        message = client.messages.create(
+            direction=WhatsAppMessage.Direction.OUTBOUND, body=form.cleaned_data["body"]
+        )
+        return JsonResponse(serialize_message(message), status=201)
+
+
+class ConversationSimulatedReplyApiView(ClientScopedApiView):
+    def post(self, request: HttpRequest, pk: int) -> JsonResponse:
+        client = Client.objects.get(pk=pk)
+        if not whatsapp_number_of(client):
+            return chat_unavailable_response()
+        try:
+            message = receive_simulated_message(build_simulated_reply(client))[0]
+        except WebhookRejected as rejection:
+            return error_response(rejection.code, rejection.message, rejection.status)
+        return JsonResponse(serialize_message(message), status=201)
 
 
 class ClientStatsApiView(ApiView):

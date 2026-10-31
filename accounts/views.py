@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.views import LoginView
+from django.shortcuts import resolve_url
 from django.http import HttpRequest, HttpResponse
 
 from . import throttle
@@ -10,6 +11,13 @@ class ThrottledLoginView(LoginView):
     template_name = "accounts/login.html"
     authentication_form = LoginForm
     redirect_authenticated_user = True
+    honor_next = False
+
+    def get_success_url(self) -> str:
+        """La aplicación siempre abre en el Panel; solo Admin vuelve a la página pedida."""
+        if self.honor_next:
+            return super().get_success_url()
+        return resolve_url(settings.LOGIN_REDIRECT_URL)
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)

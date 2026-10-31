@@ -38,6 +38,13 @@ class LoginLimitsTests(AuthTestCase):
 
 
 class LoginRedirectTests(AuthTestCase):
+    def test_always_starts_on_the_dashboard(self):
+        response = self.client.post(
+            LOGIN_URL,
+            {"username": "revisor", "password": "clave-correcta", "next": "/clientes/"},
+        )
+        self.assertRedirects(response, DASHBOARD_URL)
+
     def test_external_next_is_ignored(self):
         response = self.client.post(
             LOGIN_URL,

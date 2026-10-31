@@ -349,7 +349,7 @@
 
   .client-row td[data-label="Nombre"] {
     margin-bottom: var(--space-2);
-    padding-right: 84px;
+    padding-right: 124px;
   }
 
   .client-row td[data-label="Empresa"] {

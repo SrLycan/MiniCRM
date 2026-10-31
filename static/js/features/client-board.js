@@ -1,6 +1,6 @@
 import { createClientIdentity, createElement } from "../core/dom.js";
 import { boardColumnNote } from "../core/utils.js";
-import { createActionButton } from "./client-table.js";
+import { createActionButton, createChatLinks } from "./client-table.js";
 
 const SKELETON_CARDS = 3;
 
@@ -48,6 +48,7 @@ function createCard(client, index, statuses) {
       "div",
       { class: "board-card__footer" },
       createStatusSelect(client, statuses),
+      ...createChatLinks(client),
       createActionButton({ icon: "edit", label: `Editar a ${client.name}`, action: "edit" }),
       createActionButton({
         icon: "trash",

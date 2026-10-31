@@ -3,19 +3,17 @@
 Mejoras visibles sobre Órbita CRM, sin romper la simplicidad del proyecto base descrito en
 `SPEC.md`.
 
-**Fuera de alcance:** etapas nuevas de venta, bandeja de conversaciones e integración real
-con Meta.
+**Fuera de alcance:** etapas nuevas de venta e integración real con Meta.
 
 ## Tablero Kanban
 
 **Objetivo:** ver y mover la cartera por estado sin abrir el formulario.
 
-- La página de clientes alterna entre **Tabla** y **Tablero**. La vista elegida se guarda
-  en la URL con `view=board`.
+- El tablero es una página propia, `/tablero/`, debajo de Clientes en el menú.
 - El tablero tiene una columna por cada estado actual: Prospecto, Cliente e Inactivo.
 - Cada tarjeta muestra avatar, nombre, empresa, origen y acciones de editar y eliminar.
-- La búsqueda funciona igual en ambas vistas. En el tablero se ocultan los filtros por
-  estado, el orden y la paginación, porque las columnas ya cumplen esa función.
+- Tiene su propio buscador. No lleva filtros por estado ni paginación, porque las columnas
+  ya cumplen esa función.
 - Cada columna muestra hasta 50 clientes y su total. Si hay más, avisa cuántos se muestran.
 
 **Mover una tarjeta**
@@ -38,7 +36,6 @@ desplazamiento horizontal de 360 a 1920 px.
 
 ### Criterios de aceptación
 
-- [x] La vista se conserva al recargar y al compartir la URL.
 - [x] Arrastrar una tarjeta cambia su estado y persiste al recargar.
 - [x] El selector cambia el estado solo con teclado.
 - [x] Un error del servidor devuelve la tarjeta a su columna y lo informa.
@@ -71,19 +68,33 @@ seguridad de un webhook real pero sin depender de Meta.
 - Teléfono en formato internacional y estado `prospect`.
 - El número queda en `whatsapp_id`, único en la base de datos. Un segundo mensaje del mismo
   número no crea otro prospecto, aunque luego se le haya puesto un correo real.
-- El texto del mensaje no se guarda, porque no hay bandeja de conversaciones.
+- Si el teléfono ya pertenece a un cliente, el mensaje se asocia a él y conserva sus datos.
+  `0991234567`, `+593 99 123 4567` y `593991234567` cuentan como el mismo número.
 
 **Correo:** WhatsApp no entrega correo y `Client.email` es obligatorio y único. El prospecto
 recibe `<número>@whatsapp.invalid`, un dominio reservado que nunca entrega correo. La API lo
 devuelve vacío, la interfaz muestra "Sin dato" y el formulario pide el correo real al editar.
 
-**Simulación:** el botón "Simular mensaje de WhatsApp" llama a
-`POST /api/clients/simulate-whatsapp/`, con sesión y CSRF. El servidor arma un mensaje con el
-formato de Meta, lo firma y lo pasa por el mismo código del webhook. El secreto nunca llega
-al navegador.
+**Simulación:** los botones de la pantalla de WhatsApp llaman al servidor con sesión y CSRF.
+El servidor arma un mensaje con el formato de Meta, lo firma y lo pasa por el mismo código
+del webhook. El secreto nunca llega al navegador.
 
-**Interfaz:** insignia "WhatsApp" en la tabla y en el tablero. El botón deja claro que es una
-simulación y un toast confirma el prospecto creado.
+**Chat:** apartado **WhatsApp** en el menú, con la lista de conversaciones y el chat.
+
+- Cada mensaje se guarda en `WhatsAppMessage`. `wa_message_id` evita duplicar los reintentos
+  de Meta, y al eliminar un cliente se eliminan sus mensajes.
+- Responder guarda un mensaje saliente. Un aviso visible aclara que no se envía a WhatsApp.
+- **Simular respuesta del cliente** hace entrar un mensaje por el webhook firmado.
+- **Simular cliente nuevo** crea un prospecto con su primer mensaje y abre su chat.
+- Tabla y tablero enlazan al chat de cada cliente con teléfono.
+- En móvil la lista y el chat se muestran uno a la vez.
+
+| Método y ruta | Uso |
+|---|---|
+| `GET /api/conversations/` | Conversaciones, de la más reciente a la más antigua |
+| `GET /api/conversations/<id>/` | Datos del cliente y sus mensajes |
+| `POST /api/conversations/<id>/messages/` | Responder, hasta 1000 caracteres |
+| `POST /api/conversations/<id>/simulate-reply/` | Simular una respuesta del cliente |
 
 ### Criterios de aceptación
 
@@ -93,7 +104,9 @@ simulación y un toast confirma el prospecto creado.
 - [x] Sin secreto configurado el webhook falla cerrado con 503.
 - [x] Editar un prospecto de WhatsApp exige un correo real y conserva su origen.
 - [x] Mover un prospecto de WhatsApp en el tablero funciona aunque no tenga correo real.
-- [x] El botón crea un prospecto visible sin recargar, en ambas vistas.
+- [x] Un cliente registrado que escribe conserva su correo, empresa y estado.
+- [x] Responder y simular una respuesta funcionan sin recargar y persisten.
+- [x] El HTML escrito en un mensaje se muestra como texto.
 
 ## Deshacer al eliminar
 
@@ -105,7 +118,7 @@ enunciado.
 - El `DELETE` se envía cuando termina ese tiempo. Deshacer solo cancela el envío, así que el
   cliente conserva su `id` y su fecha de creación, sin papelera ni cambios en el modelo.
 - Mientras el borrado está pendiente, el cliente no aparece en la tabla ni en el tablero,
-  aunque se busque o se cambie de vista.
+  aunque se busque.
 - Si la persona sale de la página antes de tiempo, el `DELETE` se envía con `keepalive`.
 - Si el servidor rechaza el borrado, un toast lo informa y el cliente vuelve a la lista.
 

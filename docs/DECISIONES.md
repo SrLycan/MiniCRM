@@ -31,5 +31,13 @@ Cada decisión lleva su motivo, para no rediscutirla y para poder explicarla en 
 | 25 | `whatsapp_id` único en lugar de un campo `source` | Un solo campo identifica al prospecto, evita duplicados por reintentos y también indica el origen |
 | 26 | La simulación pasa por el mismo código del webhook | Lo que se muestra es el flujo real, y el secreto se queda en el servidor |
 | 27 | El webhook responde 503 si no hay secreto | Sin clave no se puede verificar la firma, así que falla cerrado en vez de aceptar mensajes |
-| 28 | El texto de los mensajes no se guarda | No hay bandeja de conversaciones, y así no se almacenan datos personales sin uso |
+| 28 | Los mensajes se guardan en `WhatsAppMessage` | Reemplaza la decisión inicial de no guardarlos: al probar la app quedó claro que un botón sin chat no mostraba el flujo |
 | 29 | Deshacer aplaza el `DELETE` en el navegador, sin papelera en la base de datos | No cambia el modelo ni la regla de correo único, y el cliente conserva su `id` y su fecha; al salir de la página se envía con `keepalive` |
+| 30 | Corregir con commits nuevos en lugar de reescribir `main` | Reescribir exige un push forzado y borra el proceso que el enunciado evalúa con los commits progresivos |
+| 31 | Tablero y WhatsApp como apartados propios del menú | Cada uno es una tarea distinta, y Clientes queda enfocado en la lista |
+| 32 | Asociar los mensajes con `phone_key`, el teléfono normalizado | Evita crear un prospecto vacío cuando escribe alguien ya registrado con el número en otro formato |
+| 33 | CSP propia con un middleware pequeño | Django 5.2 no la incluye y una dependencia no se justifica para una cabecera; `style-src` admite `unsafe-inline` por las variables CSS en línea, pero `script-src` no |
+| 34 | `DJANGO_HTTPS` activa cookies seguras, redirección y HSTS | En local Docker usa HTTP y esas opciones impedirían iniciar sesión |
+| 35 | Bloqueo adicional por IP y el mismo login para Admin | El bloqueo por usuario no frena probar muchos usuarios, y Admin es la entrada con más permisos |
+| 36 | Usuario demo sin superusuario | Sus credenciales son públicas en la demo, así que solo debe poder administrar clientes |
+| 37 | Cada visita abre en modo claro y en el Panel | Da una entrada siempre igual; `sessionStorage` mantiene el modo oscuro solo mientras dure la pestaña, y Admin sí respeta la página pedida |

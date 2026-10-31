@@ -6,6 +6,8 @@ import {
   clientCountLabel,
   createDeferredActions,
   debounce,
+  formatDate,
+  formatMessageTime,
   hueFromText,
   initials,
   percentage,
@@ -60,6 +62,15 @@ test("createDeferredActions adelanta todo con flush y no repite", (context) => {
     [1, { keepalive: true }],
     [2, { keepalive: true }],
   ]);
+});
+
+test("formatMessageTime muestra la hora hoy y la fecha otros días", () => {
+  const now = new Date(2026, 9, 31, 18, 0);
+  const today = new Date(2026, 9, 31, 9, 5).toISOString();
+  const earlier = new Date(2026, 9, 29, 9, 5).toISOString();
+
+  assert.match(formatMessageTime(today, now), /^0?9:05/);
+  assert.equal(formatMessageTime(earlier, now), formatDate(earlier));
 });
 
 test("boardColumnNote avisa solo si la columna no muestra a todos", () => {

@@ -3,6 +3,8 @@ from django import forms
 from .models import Client
 
 
+REPLY_MAX_LENGTH = 1000
+
 STATUS_ERROR_MESSAGES = {
     "required": "Selecciona un estado.",
     "invalid_choice": "Selecciona un estado válido.",
@@ -35,3 +37,13 @@ class ClientStatusForm(forms.ModelForm):
         model = Client
         fields = ["status"]
         error_messages = {"status": STATUS_ERROR_MESSAGES}
+
+
+class WhatsAppReplyForm(forms.Form):
+    body = forms.CharField(
+        max_length=REPLY_MAX_LENGTH,
+        error_messages={
+            "required": "Escribe un mensaje.",
+            "max_length": f"El mensaje admite hasta {REPLY_MAX_LENGTH} caracteres.",
+        },
+    )
