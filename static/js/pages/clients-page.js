@@ -8,7 +8,7 @@ import {
   renderBoard,
   renderBoardSkeleton,
 } from "../features/client-board.js";
-import { openDeleteDialog } from "../features/client-delete.js";
+import { isPendingDeletion, openDeleteDialog } from "../features/client-delete.js";
 import { notifyClientsChanged, onClientsChanged } from "../features/client-events.js";
 import { openClientForm } from "../features/client-form.js";
 import { renderRows, renderSkeleton } from "../features/client-table.js";
@@ -159,22 +159,29 @@ function renderPagination({ page, pages }) {
   );
 }
 
+/** Un cliente en espera de Deshacer sigue en el servidor, pero ya no se muestra. */
+function withoutPendingDeletions(results, total) {
+  const clients = results.filter(({ id }) => !isPendingDeletion(id));
+  return { clients, total: total - (results.length - clients.length) };
+}
+
 async function loadTable(signal) {
   const { results, pagination: pageInfo } = await clientsApi.list(queryParams(), signal);
-  currentClients = results;
+  const { clients, total } = withoutPendingDeletions(results, pageInfo.total);
+  currentClients = clients;
   state.page = pageInfo.page;
   syncUrl();
 
   hideState();
-  renderRows(rows, results);
+  renderRows(rows, clients);
   renderPagination(pageInfo);
-  return pageInfo.total;
+  return total;
 }
 
 async function loadColumn(status, signal) {
   const params = { status, page_size: BOARD_COLUMN_SIZE, ...(state.q && { q: state.q }) };
   const { results, pagination: pageInfo } = await clientsApi.list(params, signal);
-  return [status, { clients: results, total: pageInfo.total }];
+  return [status, withoutPendingDeletions(results, pageInfo.total)];
 }
 
 async function loadBoard(signal) {
