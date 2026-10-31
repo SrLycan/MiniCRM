@@ -24,5 +24,5 @@ Mismo flujo que `PLAN.md`: una rama `feature/*` por fase, fusionada a `develop` 
 
 ## Fase 3: Cierre
 
-- [ ] `README.md` y `DECISIONES.md`
+- [x] `README.md` y `DECISIONES.md`
 - [ ] Pruebas completas y CI en verde
