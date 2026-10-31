@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db import IntegrityError
@@ -7,12 +8,15 @@ from django.db.models import Count
 from django.db.models.functions import TruncWeek
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from .forms import ClientForm, ClientStatusForm
 from .models import Client, normalize_search_text
 from .serializers import parse_json_object, serialize_client
+from .whatsapp import WebhookRejected, build_simulated_message, receive_webhook, sign
 
 PAGE_SIZE = 10
 MAX_PAGE_SIZE = 100
@@ -137,6 +141,34 @@ class ClientDetailApiView(ApiView):
     def delete(self, request: HttpRequest, pk: int) -> HttpResponse:
         Client.objects.filter(pk=pk).delete()
         return HttpResponse(status=204)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class WhatsAppWebhookView(View):
+    """Sin sesión ni CSRF: quien llama es un servicio y lo autentica la firma del cuerpo."""
+
+    http_method_not_allowed = ApiView.http_method_not_allowed
+
+    def post(self, request: HttpRequest) -> JsonResponse:
+        signature = request.headers.get("X-Hub-Signature-256", "")
+        try:
+            receive_webhook(request.body, signature, settings.WHATSAPP_APP_SECRET)
+        except WebhookRejected as rejection:
+            return error_response(rejection.code, rejection.message, rejection.status)
+        # Meta reintenta si no recibe un 200, también cuando el mensaje ya se procesó.
+        return JsonResponse({"status": "ok"})
+
+
+class WhatsAppSimulationApiView(ApiView):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        """Firma aquí el mensaje para que el secreto nunca llegue al navegador."""
+        secret = settings.WHATSAPP_APP_SECRET
+        body = build_simulated_message()
+        try:
+            client = receive_webhook(body, sign(body, secret), secret)[0]
+        except WebhookRejected as rejection:
+            return error_response(rejection.code, rejection.message, rejection.status)
+        return JsonResponse(serialize_client(client), status=201)
 
 
 class ClientStatsApiView(ApiView):
